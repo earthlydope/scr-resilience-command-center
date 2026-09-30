@@ -115,27 +115,26 @@ window.SCR = window.SCR || {};
     const scopeStr = `Sector: ${state.sector === 'all' ? 'All' : D.sectorName(state.sector)} ; Value Stream: ${state.stream === 'all' ? 'All' : state.stream}`;
     SCR.setCrumbs([{ label: 'Executive Summary' }], scopeStr);
 
-    /* ===== Welcome hero (the E2E program banner) ===== */
-    host.appendChild(U.el(`<div class="hero compact">
-      <h1>Welcome to the E2E Supply Chain Resilience Command Center</h1>
-      <p><strong>Supply Chain Resilience</strong> creates end-to-end visibility to vulnerabilities by quantifying
-      <strong>Value at Risk</strong> across every product, material, supplier, plant, DC and market — focusing
-      mitigation where it protects the most revenue. Sensing, impact math and mitigation run continuously on an
-      agentic AI layer; humans approve the moves that matter.</p>
+    /* ===== Today: greeting + headline numbers, with the agents' briefing beside it ===== */
+    const today = U.el('<section class="today"></section>');
+    today.appendChild(U.el(`<div class="hero">
+      <div>
+        <div class="today-eyebrow"><span class="live-dot"></span>Executive Summary · ${U.esc(SCR.brief.asOfLong())}</div>
+        <h1 class="today-title">${SCR.brief.greeting()}. <span class="ai-text">${F.usdM(D.kpis.totalAVAR)}</span> of adjusted value is at risk across ${D.products.length} products.</h1>
+        <p class="today-sub">End-to-end visibility of vulnerabilities across every product, material, supplier, plant, DC and market.
+          Sensing, impact maths and mitigation run continuously on the agentic layer — you approve the moves that matter.</p>
+      </div>
       <div class="hero-stats">
         <div class="hero-stat"><div class="hs-val">${F.usdM(D.kpis.totalNTS)}</div><div class="hs-label">NTS in scope</div></div>
         <div class="hero-stat"><div class="hs-val">${F.usdM(D.kpis.totalVAR)}</div><div class="hs-label">Value at risk</div></div>
-        <div class="hero-stat"><div class="hs-val">${F.usdM(D.kpis.totalAVAR)}</div><div class="hs-label">Wtd. AVAR</div></div>
-        <div class="hero-stat"><div class="hs-val">${D.kpis.enterpriseRI}%</div><div class="hs-label">Enterprise RI</div></div>
+        <div class="hero-stat"><div class="hs-val">${D.kpis.enterpriseRI}%</div><div class="hs-label">Enterprise RI · ${F.signed(D.kpis.riDelta, ' pts')}</div></div>
         <div class="hero-stat"><div class="hs-val">${D.kpis.gapMaterials}</div><div class="hs-label">TTR &gt; TTS components</div></div>
-        <div class="hero-stat"><div class="hs-val">${F.usdM(D.kpis.mitigatedYtd)}</div><div class="hs-label">AVAR mitigated YTD</div></div>
-        <div class="hero-stat"><div class="hs-val">${D.kpis.detectionLeadDays}d</div><div class="hs-label">Mean detection lead</div></div>
+        <div class="hero-stat"><div class="hs-val">${F.usdM(D.kpis.mitigatedYtd)}</div><div class="hs-label">Mitigated YTD</div></div>
+        <div class="hero-stat"><div class="hs-val">${D.kpis.detectionLeadDays}d</div><div class="hs-label">Detection lead</div></div>
       </div>
     </div>`));
-
-    host.appendChild(U.el(`<div class="page-head">
-      <span class="ph-kicker">Supply Chain Resilience :</span><h1>Executive Summary</h1>
-    </div>`));
+    today.appendChild(SCR.brief.card('rrl'));
+    host.appendChild(today);
 
     /* ===== Filter flyout ===== */
     const streams = state.sector === 'all'
@@ -546,6 +545,11 @@ window.SCR = window.SCR || {};
   }
 
   SCR.registerPage('executive', {
+    context: () => ({
+      scope: (state.sector === 'all' ? 'All sectors' : SCR.data.sectorName(state.sector)) + (state.stream === 'all' ? '' : ' · ' + state.stream),
+      filters: Object.assign({}, state),
+      products: scopeProducts()
+    }),
     title: 'Executive Summary',
     render
   });

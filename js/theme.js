@@ -5,8 +5,8 @@
    every chart re-themes on light/dark toggle. All chart code
    must pull colors from here — never hardcode.
 
-   Categorical palette (validated, fixed order, never cycled):
-   teal → violet → amber → blue → rose → emerald → indigo → orange
+   Categorical palette (Apple system hues, fixed order, never cycled):
+   teal → purple → orange → blue → pink → green → indigo → brown
    ============================================================ */
 window.SCR = window.SCR || {};
 
@@ -16,6 +16,10 @@ SCR.pages = SCR.pages || {};
 SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = page; };
 
 (function () {
+  /* SF Pro first: -apple-system resolves to SF Pro Text/Display with optical
+     sizing on Apple platforms; Inter is the cross-platform stand-in. */
+  const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, system-ui, sans-serif';
+
   function cssVar(name) {
     return getComputedStyle(document.body || document.documentElement)
       .getPropertyValue(name).trim();
@@ -44,14 +48,15 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
         serious: cssVar('--status-serious'),
         critical: cssVar('--status-critical')
       },
-      // sequential single-hue indigo ramp (light→dark reads low→high)
+      // sequential single-hue blue ramp (light→dark reads low→high)
       seq: isDark
-        ? ['#312e81', '#3730a3', '#4338ca', '#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe']
-        : ['#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca', '#3730a3'],
+        ? ['#0b2a4d', '#0e3a6b', '#11508f', '#1466b8', '#1f7fe0', '#4a9bf5', '#7ab6fb', '#a9d0ff']
+        : ['#e6f1ff', '#cce3ff', '#a3ccff', '#74b0ff', '#4593f5', '#1a78e6', '#0a62c7', '#0a4c9a'],
       // ordinal ramp for funnels / tiers (mid steps for contrast on both surfaces)
       ordinal: isDark
-        ? ['#4338ca', '#4f46e5', '#6366f1', '#818cf8', '#a5b4fc']
-        : ['#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca']
+        ? ['#1466b8', '#1f7fe0', '#4a9bf5', '#7ab6fb', '#a9d0ff']
+        : ['#a3ccff', '#74b0ff', '#4593f5', '#1a78e6', '#0a62c7'],
+      font: FONT
     };
   }
 
@@ -60,48 +65,63 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
     const t = tokens();
     return {
       color: t.series,
-      textStyle: {
-        fontFamily: '"Inter", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
-        color: t.ink2
-      },
+      textStyle: { fontFamily: FONT, color: t.ink2 },
+      // settle like UIKit: quick start, long soft landing
+      animationDuration: 850,
+      animationEasing: 'quarticOut',
+      animationDurationUpdate: 520,
+      animationEasingUpdate: 'quarticOut',
       tooltip: {
-        backgroundColor: t.surface,
-        borderColor: t.border,
-        borderWidth: 1,
-        padding: [10, 13],
-        textStyle: { color: t.ink, fontSize: 14.5 },
-        extraCssText: 'box-shadow:0 8px 30px rgba(0,0,0,.18);border-radius:10px;'
+        // a glass popover rather than a boxed label
+        backgroundColor: t.isDark ? 'rgba(44, 44, 46, 0.78)' : 'rgba(255, 255, 255, 0.80)',
+        borderColor: 'transparent',
+        borderWidth: 0,
+        padding: [10, 14],
+        textStyle: { color: t.ink, fontSize: 13.5, fontFamily: FONT },
+        extraCssText: 'backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);' +
+          'border-radius:14px;box-shadow:0 0 0 .5px ' + (t.isDark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.08)') +
+          ',0 10px 32px rgba(0,0,0,' + (t.isDark ? '.5' : '.14') + ');line-height:1.5;'
       },
       legend: {
-        textStyle: { color: t.ink2, fontSize: 14 },
-        itemWidth: 10, itemHeight: 10, icon: 'roundRect', itemGap: 14
+        textStyle: { color: t.ink2, fontSize: 13, fontFamily: FONT },
+        itemWidth: 9, itemHeight: 9, icon: 'circle', itemGap: 16
       },
       grid: { left: 8, right: 14, top: 34, bottom: 4, containLabel: true }
     };
   }
 
+  /* Axis overrides merge one level deep, so a page that only sets a
+     formatter keeps the themed label colour, size and face. */
+  function mergeAxis(base, extra) {
+    const out = Object.assign({}, base, extra || {});
+    ['axisLabel', 'axisLine', 'axisTick', 'splitLine'].forEach(k => {
+      if (base[k] && extra && extra[k]) out[k] = Object.assign({}, base[k], extra[k]);
+    });
+    return out;
+  }
+
   /** Category axis (x) with recessive styling. */
   function catAxis(data, extra) {
     const t = tokens();
-    return Object.assign({
+    return mergeAxis({
       type: 'category',
       data,
       axisLine: { lineStyle: { color: t.axis } },
       axisTick: { show: false },
-      axisLabel: { color: t.ink3, fontSize: 13 }
-    }, extra || {});
+      axisLabel: { color: t.ink3, fontSize: 12.5, fontFamily: FONT }
+    }, extra);
   }
 
   /** Value axis (y) with hairline grid. */
   function valAxis(extra) {
     const t = tokens();
-    return Object.assign({
+    return mergeAxis({
       type: 'value',
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: t.ink3, fontSize: 13 },
+      axisLabel: { color: t.ink3, fontSize: 12.5, fontFamily: FONT },
       splitLine: { lineStyle: { color: t.grid, width: 1 } }
-    }, extra || {});
+    }, extra);
   }
 
   /* ---------------- Formatters ---------------- */

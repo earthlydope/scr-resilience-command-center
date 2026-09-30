@@ -57,22 +57,57 @@ Cross-cutting:
   persisted) shows only that persona's features (nav-as-metadata with per-item persona
   visibility), landing jumps to their cockpit ("MY VIEW"), and the copilot's sample
   questions re-tune per persona. R&R Leader sees everything; VSL, Category and Site
-  leaders get focused sidebars. The Executive Summary opens with the E2E welcome hero.
-- **Resilience Copilot** — a floating dock bottom-right (Terova CopilotDock pattern):
-  an extended FAB expands into a chat panel with persona-specific sample questions,
-  live-computed agent-attributed answers, action chips, drill-through and a
-  new-conversation reset. Every business KPI is answerable by name — NTS in scope,
-  VAR, weighted AVAR, enterprise RI, TTR > TTS components, AVAR mitigated YTD,
-  detection lead, single-source count, alerts and actions — as a value ("NTS in
-  scope") or a definition ("how is AVAR calculated"), plus TTS/TTR/RRE concepts
-  and a full KPI board on "show me all KPIs". Data freshness lives behind a refresh icon tooltip in the
-  app bar (weekly recalc + daily external feeds).
+  leaders get focused sidebars. The Executive Summary opens with a "Today" hero: a
+  greeting, the headline numbers and the agents' briefing side by side.
+- **Resilience Copilot** — a floating glass panel (⌘K) that knows what you are looking
+  at; see *Intelligence that acts* below. Every business KPI is answerable by name — NTS
+  in scope, VAR, weighted AVAR, enterprise RI, TTR > TTS components, AVAR mitigated YTD,
+  detection lead, single-source count, alerts and actions — as a value ("NTS in scope")
+  or a definition ("how is AVAR calculated"), plus TTS/TTR/RRE concepts and a full KPI
+  board on "show me all KPIs". Data freshness lives in the sidebar footer and behind the
+  refresh icon (weekly recalc + daily external feeds).
 - **360° drawers** — click any supplier / material / product / site / alert anywhere
   for a detail drawer with facts, 12-month trends, TTS-vs-TTR bars and cross-links.
 - **Global search**, **alert center**, **dark mode** (fully re-themed charts), toasts,
   approve/dismiss workflow on agent recommendations, executive brief & daily digest
   generators, blueprint-faithful presets (the bottle-caps TTS 7d / TTR 21d case is
   the flagship scenario).
+
+## Intelligence that acts
+
+The AI layer (`js/intelligence.js` + `js/copilot.js`) is built to be useful in the moment,
+not just conversational. Everything is computed from the live model at ask time.
+
+- **Context-aware.** The copilot follows the page, its live filters and the entity open in
+  a 360° drawer. A chip above the composer shows the context ("Supplier · CapForm
+  Industries"); tap × to ask about the whole enterprise instead. "What if it fails for
+  8 weeks?" needs no names. Suggestions re-tune to what is open.
+- **What-ifs answered in the chat.** Duration, severity and disruption type are parsed
+  from plain English ("6 weeks at 50%", "floods", "port"), run on the same twin the Studio
+  uses, and returned with sales in the path, cover absorbed, sales at risk, RI impact, the
+  binding component, worst-hit SKUs, the best plan and a duration-sensitivity chart.
+  Follow-ups refine the last run ("and at full severity?").
+- **It acts.** "Create action", "Create action from best plan" and every drawer's *Create
+  mitigation action* open a sheet the Mitigation Strategist has already filled in (type,
+  owner, due date sized to cover, linked alert, cost, expected AVAR cut, residual risk
+  before → after). Confirming puts a real row on the action tracker, logs it to the agent
+  feed and updates the counts. "Mitigation plan for single-source materials" queues real
+  proposals; approving a proposal (in the queue or the chat) creates its tracked action.
+- **It prioritises.** "For you today" on each persona cockpit ranks three things to do,
+  each with a one-tap action. Proposals are ranked once — protection per $ of cost,
+  weighted for alert severity — and every surface uses that ranking. The alert centre opens
+  with a written summary of the stack.
+- **It shows its working.** Computed answers expand into the formula and inputs behind
+  them (risk score weights, VAR and AVAR maths, RI terms, scenario steps).
+- **It writes.** Supplier outreach emails grounded in the actual gap and risk drivers, and
+  the executive brief, both ready to copy.
+- **It understands the model.** Suppliers, materials, products, plants, DCs, markets,
+  sectors, value streams and categories are resolved from names, brands, cities and
+  aliases ("MCU", "caps", "Pune plant"), tolerant of typos with "did you mean". Rankings
+  ("top 3 suppliers by AVAR in packaging"), comparisons ("compare Pune and Atlanta"),
+  sourcing ("who else can supply closures?"), dependencies and "what breaks X first".
+- **Everywhere.** Global search hands questions to the copilot; every card's *AI insights*
+  drawer has "Ask a follow-up" that carries the card into the conversation.
 
 ## The 6 agents
 
@@ -89,7 +124,8 @@ js/theme.js           design tokens → ECharts bridge, formatters, TTR/TTS/RI h
 js/data.js            synthetic dataset + the resilience engine (single source of truth)
 js/charts.js          chart lifecycle + waterfall/mekko/gantt/sparkline/combo builders
 js/components.js      shared UI + the 360° detail drawers
-js/copilot.js         Resilience Copilot
+js/intelligence.js    context, entity resolution, action/proposal engine, daily briefing
+js/copilot.js         Resilience Copilot (intent router + answers)
 js/pages/*.js         one module per page (self-registering)
 js/app.js             router, persona registry + lens switcher, sidebar nav, search
 vendor/echarts.min.js Apache ECharts 5.5 (vendored — fully offline)
@@ -97,12 +133,14 @@ vendor/echarts.min.js Apache ECharts 5.5 (vendored — fully offline)
 
 ## Navigation
 
-Collapsible left sidebar (persona-filtered, subtle width animation) under a light app bar:
+A floating glass sidebar (persona-filtered, collapsible from the toolbar) beside a toolbar that
+floats over the page — content scrolls beneath it with a soft blur edge:
 **My cockpit** (Executive Summary · Value Streams · Category & Suppliers · Site
 Resilience) · **Intelligence** (Network Explorer · Scenario Studio) · **Act** (Alerts &
 Actions · Recommendations) · **Govern** (Data Quality). An always-visible filter bar scopes
-each persona page. Signature elements modernized from the original screenshots: icon-chip KPI strips
-with the insight bulb, teal-headed tables, the Node Overview drill (product list → Node
+each persona page. Press `/` to search and `⌘K` for the copilot. Signature elements modernized
+from the original screenshots: KPI strips with a "Summarize this view" tile, grouped-header
+tables, the Node Overview drill (product list → Node
 AVAR vs Sales Impacted with AVAR/SALES toggle and in-cell bars), the Category node data
 summary (multi-measure in-row bars) and the Node Risk Summary heat matrix.
 
@@ -128,13 +166,22 @@ daily-digest generator composes a live brief.
 
 ## Design language
 
-A clean, modern SaaS-analytics UI in the Terova/Tradewind idiom: Inter on white cards over a
-soft neutral canvas, a light dark-mode-capable app bar, and **indigo `#4f46e5`** as the single
-decisioning accent. KPIs render as **spacious individual tiles** — a border-left accent, a soft
-tinted icon chip, a large value, and a rounded delta pill or arrowed drill hint — not a joined
-strip. Filters sit in a clean always-visible bar. Cards use a 14px radius, hairline borders and
-soft layered shadows that lift on hover. A **validated categorical chart palette** in fixed order
-(teal → violet → amber → blue → rose → emerald → indigo → orange; CVD-checked for both light and
-dark surfaces) drives every chart; status colors (emerald/amber/orange/red) are reserved for
-severity. The one place a % line meets $ columns, the line gets its own aligned panel and axis —
-never a second y-axis on the same plot.
+Apple-inspired, in the spirit of macOS Tahoe and iOS 26:
+
+- **Type** — SF Pro (`-apple-system`) with Inter as the cross-platform stand-in; large bold
+  titles with tight tracking; key figures in SF Pro Rounded with tabular numerals.
+- **Materials** — *Liquid Glass* only on chrome that floats over content (sidebar, toolbar
+  controls, drawer, copilot, popovers, notifications), over an ambient light field. Cards stay
+  opaque so charts stay legible.
+- **Intelligence** — the iridescent blue → violet → pink → orange gradient marks anything the
+  agents wrote or computed (the briefing, AI insights, the copilot's orb and its Siri-style
+  edge glow while thinking), and nothing else.
+- **Colour** — Apple blue (`#0071e3`) is the single interaction accent. Charts use Apple system
+  hues in a fixed order (teal → purple → orange → blue → pink → green → indigo → brown); status
+  colours (green / orange / red) are reserved for severity, with text-safe variants for small type.
+- **Shape & motion** — continuous (squircle) corners where the browser supports them, grouped
+  table headers, segmented controls with a floating thumb, capsule buttons, rounded chart bars,
+  and spring-eased sheets and drawers; motion is removed under *Reduce Motion*.
+- **Layout** — Apple Health–style KPI tiles (coloured glyph and title, big rounded figure, chevron
+  when it drills); the one place a % line meets $ columns, the line gets its own aligned panel
+  and axis — never a second y-axis on the same plot. Light and dark themes are both first-class.

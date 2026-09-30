@@ -17,32 +17,32 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
   /* ================= Persona registry ================= */
   const PERSONAS = [
     {
-      id: 'rrl', short: 'R&R', name: 'Risk & Resilience Leader', color: '#8b5cf6', tag: 'Enterprise exposure',
+      id: 'rrl', short: 'R&R', name: 'Risk & Resilience Leader', color: '#af52de', tag: 'Enterprise exposure',
       role: 'Enterprise-wide view of vulnerabilities across value streams, nodes and geographies.',
       lens: 'Where is the largest exposure, and which mitigation deserves investment first?',
       home: 'executive',
-      suggests: ['Top 5 risk nodes by AVAR', 'Biggest value at risk right now', 'Daily resilience brief', 'Which products have TTR > TTS?']
+      suggests: ['What needs my attention today?', 'What should I approve first?', 'Top 5 risk nodes by AVAR', 'Draft the executive brief']
     },
     {
-      id: 'vsl', short: 'VSL', name: 'Value Chain / Stream Leader', color: '#0d9488', tag: 'Products & value streams',
+      id: 'vsl', short: 'VSL', name: 'Value Chain / Stream Leader', color: '#30b0c7', tag: 'Products & value streams',
       role: 'Keeps products, brands and value streams running despite node failures.',
       lens: 'Which SKUs are fragile, and which node breaks them first?',
       home: 'valuestream',
-      suggests: ['Which products have TTR > TTS?', 'Biggest value at risk right now', 'What if Taicang MicroControls fails for 45 days?', 'Daily resilience brief']
+      suggests: ['Most fragile products', 'What breaks AirPure Compact Purifier first?', 'What if Taicang MicroControls fails for 45 days?', 'Which products have TTR > TTS?']
     },
     {
-      id: 'cat', short: 'CAT', name: 'Category Leader', color: '#d97706', tag: 'Suppliers & materials',
+      id: 'cat', short: 'CAT', name: 'Category Leader', color: '#ff9500', tag: 'Suppliers & materials',
       role: 'Owns supplier and material risk — sourcing, qualification and commercial mitigation.',
       lens: 'Which materials need alternates, buffers or new contract terms?',
       home: 'category',
-      suggests: ['Mitigation plan for single-source materials', 'Top 5 risk nodes by AVAR', 'Why is CapForm Industries critical?', 'Which materials are single-sourced?']
+      suggests: ['Mitigation plan for single-source materials', 'Top 5 suppliers by AVAR', 'Who else can supply closures?', 'Draft an email to Taicang MicroControls']
     },
     {
-      id: 'site', short: 'SITE', name: 'SC Site Leader', color: '#3b82f6', tag: 'Plant & DC continuity',
+      id: 'site', short: 'SITE', name: 'SC Site Leader', color: '#007aff', tag: 'Plant & DC continuity',
       role: 'Protects plant & DC continuity: inbound materials, capacity and outbound supply.',
       lens: 'Can my site keep running, and what is the playbook if it cannot?',
       home: 'site',
-      suggests: ['Status of Pune plant', 'What if Pune fails for 21 days?', 'Which products have TTR > TTS?', 'Daily resilience brief']
+      suggests: ['Which plant has the shortest cover?', 'Status of Pune plant', 'What if Pune plant goes down for 21 days?', 'What is overdue?']
     }
   ];
   const DEFAULT_PERSONA = 'rrl';
@@ -128,6 +128,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
   };
 
   /* ================= Router ================= */
+  let currentKey = null;
   function navigate(key, opts) {
     const page = SCR.pages[key];
     if (!page) return;
@@ -139,7 +140,10 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     const host = document.getElementById('page');
     host.innerHTML = '';
     document.getElementById('pageScroll').scrollTop = 0;
+    currentKey = key;
     page.render(host, opts || {});
+    // after render, so the page's context() sees the filters it just applied
+    if (SCR.ai) SCR.ai.setRoute(key, opts || {});
     requestAnimationFrame(() => SCR.charts.resizeAll());
   }
   SCR.navigate = navigate;
@@ -180,6 +184,11 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     });
   }
 
+  SCR.refreshNav = function () {
+    buildNav();
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.key === currentKey));
+  };
+
   /* ================= Sidebar collapse ================= */
   function initSideToggle() {
     const shell = document.querySelector('.shell');
@@ -200,7 +209,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
       <span class="pp-avatar" style="background:color-mix(in srgb, ${p.color} 22%, transparent);color:${p.color}">${initials(p.name)}</span>
       <span class="pp-meta">
         <span class="pp-name">${SCR.ui.esc(p.name)}</span>
-        <span class="pp-cap">Viewing as · persona lens</span>
+        <span class="pp-cap">Viewing as</span>
       </span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>`;
   }
@@ -248,10 +257,12 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     const saved = localStorage.getItem('scr-theme');
     if (saved) document.body.setAttribute('data-theme', saved);
     const btn = document.getElementById('themeToggle');
+    const meta = document.querySelector('meta[name="theme-color"]');
     const sync = () => {
       const dark = document.body.getAttribute('data-theme') === 'dark';
       btn.querySelector('.ic-moon').style.display = dark ? 'none' : 'block';
       btn.querySelector('.ic-sun').style.display = dark ? 'block' : 'none';
+      if (meta) meta.setAttribute('content', dark ? '#000000' : '#f5f5f7');
     };
     sync();
     btn.addEventListener('click', () => {
@@ -267,17 +278,25 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
   function initNotifications() {
     const panel = document.getElementById('notifPanel');
     const sevColor = { critical: 'var(--status-critical)', high: 'var(--status-serious)', medium: 'var(--status-warning)' };
-    panel.innerHTML = `
-      <div class="notif-head">Alerts <span>ranked by impact × urgency</span></div>
-      <div class="notif-list">${SCR.data.notifications.map(n => `
-        <div class="notif-item">
-          <span class="n-dot" style="background:${sevColor[n.sev] || 'var(--ink-3)'}"></span>
-          <div class="n-body">${n.text}<span class="n-time">${n.time} UTC</span></div>
-        </div>`).join('')}
-      </div>`;
+    function renderPanel() {
+      panel.innerHTML = `
+        <div class="notif-head">Alerts <span>ranked by impact × urgency</span></div>
+        <div class="notif-summary ai-ring">
+          <div class="ns-head"><span class="ai-mark">${SCR.ui.SPARK}</span>Summary · Resilience Intelligence</div>
+          ${SCR.brief.notificationSummary()}
+        </div>
+        <div class="notif-list">${SCR.data.notifications.map(n => `
+          <div class="notif-item">
+            <span class="n-dot" style="background:${sevColor[n.sev] || 'var(--ink-3)'}"></span>
+            <div class="n-body">${n.text}<span class="n-time">${n.time} UTC</span></div>
+          </div>`).join('')}
+        </div>`;
+    }
+    renderPanel();
     const btn = document.getElementById('notifBtn');
     btn.addEventListener('click', e => {
       e.stopPropagation();
+      if (!panel.classList.contains('open')) renderPanel();
       panel.classList.toggle('open');
       document.getElementById('notifDot').style.display = 'none';
     });
@@ -290,10 +309,18 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
   function initSearch() {
     const input = document.getElementById('globalSearch');
     const results = document.getElementById('searchResults');
-    function run(q) {
-      q = q.trim().toLowerCase();
+    let hits = [], kb = -1;
+    const QUESTION = /^(what|why|how|which|who|where|when|is|are|can|should|show|top|compare|simulate|draft|create|list|explain|summari[sz]e)\b|\?$/;
+    function highlight(i) {
+      const rows = results.querySelectorAll('.search-hit');
+      kb = Math.max(-1, Math.min(rows.length - 1, i));
+      rows.forEach((r, j) => r.classList.toggle('kb', j === kb));
+      if (rows[kb]) rows[kb].scrollIntoView({ block: 'nearest' });
+    }
+    function run(raw) {
+      const q = raw.trim().toLowerCase();
       if (q.length < 2) { results.classList.remove('open'); return; }
-      const hits = [];
+      hits = [];
       SCR.data.products.forEach(p => {
         if ((p.name + p.brand + p.stream).toLowerCase().includes(q))
           hits.push({ type: 'Product', label: p.name, sub: p.sectorName + ' · ' + p.stream, go: () => SCR.ui.openProduct(p.id) });
@@ -314,20 +341,35 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
         if ((a.title + a.type).toLowerCase().includes(q))
           hits.push({ type: 'Alert', label: a.title, sub: a.type, go: () => SCR.ui.openAlert(a.id) });
       });
-      results.innerHTML = hits.slice(0, 9).map((h, i) =>
-        `<button class="search-hit" data-i="${i}"><span class="hit-type">${h.type}</span><span>${SCR.ui.esc(h.label)}<span class="cell-sub">${SCR.ui.esc(h.sub)}</span></span></button>`
-      ).join('') || '<div class="empty">No matches</div>';
+      hits = hits.slice(0, 8);
+      // anything can be asked: questions go to the copilot first, names still list
+      const askHit = { type: 'Ask', label: raw.trim(), sub: 'Ask Resilience Copilot', go: () => SCR.copilot.ask(raw.trim(), { open: true }), ask: true };
+      if (QUESTION.test(q) || !hits.length) hits.unshift(askHit); else hits.push(askHit);
+      results.innerHTML = hits.map((h, i) =>
+        `<button class="search-hit ${h.ask ? 'search-ask' : ''}" data-i="${i}"><span class="hit-type">${h.ask ? '✦ Ask' : h.type}</span><span>${SCR.ui.esc(h.label)}<span class="cell-sub">${SCR.ui.esc(h.sub)}</span></span></button>`
+      ).join('');
       results.querySelectorAll('.search-hit').forEach((b, i) => {
-        b.addEventListener('click', () => {
-          hits[i].go();
-          results.classList.remove('open');
-          input.value = '';
-        });
+        b.addEventListener('click', () => choose(i));
       });
       results.classList.add('open');
+      highlight(0);
+    }
+    function choose(i) {
+      const h = hits[i];
+      if (!h) return;
+      h.go();
+      results.classList.remove('open');
+      input.value = '';
+      input.blur();
     }
     input.addEventListener('input', () => run(input.value));
     input.addEventListener('focus', () => run(input.value));
+    input.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); highlight(kb + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(kb - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); choose(kb < 0 ? 0 : kb); }
+      else if (e.key === 'Escape') { results.classList.remove('open'); input.blur(); }
+    });
     document.addEventListener('click', e => {
       if (!e.target.closest('.global-search')) results.classList.remove('open');
     });
@@ -342,7 +384,13 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
       if (e.target === document.getElementById('modalScrim')) SCR.ui.closeModal();
     });
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { SCR.ui.closeDrawer(); SCR.ui.closeModal(); SCR.copilot && SCR.copilot.close(); }
+      if (e.key === 'Escape') {
+        SCR.ui.closeDrawer(); SCR.ui.closeModal(); SCR.copilot && SCR.copilot.close();
+        ['personaMenu', 'notifPanel', 'searchResults'].forEach(id => document.getElementById(id).classList.remove('open'));
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); SCR.copilot && SCR.copilot.toggle(); }
+      const typing = /^(input|textarea|select)$/i.test((e.target && e.target.tagName) || '') || (e.target && e.target.isContentEditable);
+      if (e.key === '/' && !typing) { e.preventDefault(); document.getElementById('globalSearch').focus(); }
     });
   }
 

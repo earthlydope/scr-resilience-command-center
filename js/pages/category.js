@@ -100,8 +100,9 @@ window.SCR = window.SCR || {};
     ], scopeStr);
 
     host.appendChild(U.el(`<div class="page-head">
-      <span class="ph-kicker">Category Leader :</span><h1>${state.cat === 'all' ? 'All Categories' : D.catName(state.cat)}</h1>
+      <span class="ph-kicker">Category Leader · Node &amp; Material Risk</span><h1>${state.cat === 'all' ? 'All Categories' : D.catName(state.cat)}</h1>
     </div>`));
+    if (SCR.persona.current() === 'cat') host.appendChild(SCR.brief.card('cat', { wide: true }));
 
     const regions = [...new Set(D.suppliers.map(s => s.region))];
     host.appendChild(U.filterBlock([
@@ -506,12 +507,26 @@ window.SCR = window.SCR || {};
       b.addEventListener('click', e => {
         e.stopPropagation();
         const m = D.materialById(b.dataset.act);
-        U.createAction('alternate supplier qualification — ' + m.name);
+        U.createAction({ type: 'material', id: m.id });
       }));
   }
 
   SCR.registerPage('category', {
     title: 'Category & Suppliers',
+    context: () => {
+      const D = SCR.data;
+      const mats = fMaterials();
+      return {
+        scope: [
+          state.cat === 'all' ? 'All categories' : D.catName(state.cat),
+          state.sourcing === 'all' ? null : (state.sourcing === 'single' ? 'Single-source only' : 'Dual+ sourced'),
+          state.region === 'all' ? null : state.region
+        ].filter(Boolean).join(' · '),
+        filters: Object.assign({}, state),
+        materials: mats,
+        suppliers: fSuppliers(mats)
+      };
+    },
     render
   });
 })();

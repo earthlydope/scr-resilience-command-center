@@ -66,8 +66,9 @@ window.SCR = window.SCR || {};
     SCR.setCrumbs([{ label: 'SC Site Leader' }]);
 
     host.appendChild(U.el(`<div class="page-head">
-      <span class="ph-kicker">SC Site Leader :</span><h1>Which site are you interested in exploring?</h1>
+      <span class="ph-kicker">SC Site Leader · Site Resilience</span><h1>Which site are you interested in exploring?</h1>
     </div>`));
+    if (SCR.persona.current() === 'site') host.appendChild(SCR.brief.card('site', { wide: true }));
 
     const grid = U.el('<div class="grid grid-12"></div>');
     host.appendChild(grid);
@@ -142,7 +143,7 @@ window.SCR = window.SCR || {};
       <button class="backbtn" title="Back to site picker">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
       </button>
-      <span class="ph-kicker">Site Resilience :</span><h1>${U.esc(site.name)}</h1>
+      <span class="ph-kicker">Site Resilience</span><h1>${U.esc(site.name)}</h1>
     </div>`);
     head.querySelector('.backbtn').addEventListener('click', () => { state.site = null; SCR.navigate('site'); });
     host.appendChild(head);
@@ -447,6 +448,13 @@ window.SCR = window.SCR || {};
 
   SCR.registerPage('site', {
     title: 'Site Resilience',
+    context: () => {
+      const site = state.site ? SCR.data.plantById(state.site) : null;
+      return {
+        scope: site ? site.name : 'All plants',
+        entity: site ? { type: 'plant', id: site.id, name: site.name, ref: site } : null
+      };
+    },
     render
   });
 })();

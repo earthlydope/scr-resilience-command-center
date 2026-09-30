@@ -12,12 +12,26 @@ window.SCR = window.SCR || {};
 (function () {
   const registry = []; // { el, chart, factory }
 
+  /* Shared finish applied to every option: plain (unstacked) bars get
+     rounded caps, as in Swift Charts. Anything a chart sets explicitly wins. */
+  function polish(opt) {
+    if (!opt || !opt.series) return opt;
+    const yAxes = [].concat(opt.yAxis || []);
+    const horizontal = yAxes.length > 0 && yAxes.every(a => a && a.type === 'category');
+    [].concat(opt.series).forEach(sr => {
+      if (!sr || sr.type !== 'bar' || sr.stack) return;
+      sr.itemStyle = sr.itemStyle || {};
+      if (sr.itemStyle.borderRadius == null) sr.itemStyle.borderRadius = horizontal ? [0, 6, 6, 0] : [6, 6, 0, 0];
+    });
+    return opt;
+  }
+
   /** Mount a chart. `factory()` returns an ECharts option — it is
       re-invoked on theme change so colors always match tokens. */
   function mount(el, factory) {
     if (!el) return null;
     const chart = echarts.init(el, null, { renderer: 'canvas' });
-    chart.setOption(factory());
+    chart.setOption(polish(factory()));
     const entry = { el, chart, factory };
     // A canvas keeps its last pixel size until told otherwise, so a container
     // change that isn't a window resize (sidebar collapse, layout reflow, zoom)
@@ -52,7 +66,7 @@ window.SCR = window.SCR || {};
 
   function rerenderAll() {
     registry.forEach(e => {
-      try { e.chart.setOption(e.factory(), true); } catch (_) {}
+      try { e.chart.setOption(polish(e.factory()), true); } catch (_) {}
     });
   }
 
@@ -200,7 +214,7 @@ window.SCR = window.SCR || {};
             const gap = 2;
             const children = [{
               type: 'rect',
-              shape: { x: p0[0] + gap / 2, y: p0[1] + gap / 2, width: p1[0] - p0[0] - gap, height: p1[1] - p0[1] - gap },
+              shape: { x: p0[0] + gap / 2, y: p0[1] + gap / 2, width: p1[0] - p0[0] - gap, height: p1[1] - p0[1] - gap, r: 4 },
               style: { fill: t.series[ki % t.series.length] }
             }];
             if (d[2] === 0) {
@@ -210,7 +224,7 @@ window.SCR = window.SCR || {};
                 style: {
                   x: (p0[0] + p1[0]) / 2, y: api.coord([0, 0])[1] + 8,
                   text: colW < 96 ? d[4] : `${d[4]} · ${((d[8] / grand) * 100).toFixed(0)}%`,
-                  fill: t.ink3, font: '11.5px Inter, sans-serif', textAlign: 'center'
+                  fill: t.ink3, font: '500 11.5px ' + t.font, textAlign: 'center'
                 }
               });
             }
@@ -221,7 +235,7 @@ window.SCR = window.SCR || {};
                 style: {
                   x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2,
                   text: ((d[6] / d[8]) * 100).toFixed(0) + '%',
-                  fill: '#fff', font: '600 11px Inter, sans-serif',
+                  fill: '#fff', font: '600 11px ' + t.font,
                   textAlign: 'center', textVerticalAlign: 'middle'
                 }
               });
@@ -245,7 +259,7 @@ window.SCR = window.SCR || {};
       const phaseColor = {
         done: t.status.good,
         active: t.series[1],
-        planned: t.isDark ? '#334155' : '#cbd5e1'
+        planned: t.isDark ? 'rgba(118, 118, 128, 0.42)' : 'rgba(118, 118, 128, 0.24)'
       };
       const cats = programs.map(p => p.name);
       const rows = [];
@@ -293,7 +307,7 @@ window.SCR = window.SCR || {};
             const h = Math.min(16, api.size([0, 1])[1] * 0.42);
             return {
               type: 'rect',
-              shape: { x: start[0], y: start[1] - h / 2, width: Math.max(2, end[0] - start[0] - 2), height: h, r: 4 },
+              shape: { x: start[0], y: start[1] - h / 2, width: Math.max(2, end[0] - start[0] - 2), height: h, r: h / 2 },
               style: api.style()
             };
           },

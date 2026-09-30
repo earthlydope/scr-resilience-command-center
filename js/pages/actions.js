@@ -304,7 +304,7 @@ window.SCR = window.SCR || {};
       { h: 'Action', cell: a => `<span class="cell-main">${U.esc(a.title)}</span><span class="cell-sub">${U.esc(a.id)} · linked ${U.esc(a.linked)}</span>` },
       { h: 'Type', cell: a => `<span class="badge neutral plain">${U.esc(a.type)}</span>` },
       { h: 'Owner', cell: a => U.esc(a.owner) },
-      { h: 'Due', cell: a => `<span style="${a.status === 'Overdue' ? 'color:var(--status-critical);font-weight:700' : ''}">${U.esc(a.due)}</span>` },
+      { h: 'Due', cell: a => `<span style="white-space:nowrap;${a.status === 'Overdue' ? 'color:var(--crit-text);font-weight:700' : ''}">${U.esc(a.due)}</span>` },
       { h: 'Cost', cls: 'num', cell: a => F.usdM(a.cost) },
       { h: 'AVAR cut', cls: 'num', cell: a => a.riskCut ? `<span style="color:var(--status-good);font-weight:700">−${F.usdM(a.riskCut)}</span>` : '–' },
       { h: 'RRE pre → post', cls: 'num', cell: a => a.rrePre != null ? `${a.rrePre.toFixed(2)} → <strong>${a.rrePost.toFixed(2)}</strong>` : '–' },
@@ -312,10 +312,11 @@ window.SCR = window.SCR || {};
     ], D.actions, a => {
       const alert = D.alertById(a.linked);
       if (alert) U.openAlert(alert.id);
-    }));
+    }, { rowClass: a => a.fresh ? 'row-sel' : '' }));
   }
 
   SCR.registerPage('actions', {
+    context: () => ({ scope: state.sevFilter === 'all' ? 'All alerts' : state.sevFilter + ' alerts', filters: Object.assign({}, state) }),
     title: 'Alerts & Actions',
     crumb: 'Exception management · mitigation portfolio',
     render

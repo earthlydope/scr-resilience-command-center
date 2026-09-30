@@ -73,8 +73,9 @@ window.SCR = window.SCR || {};
     ], scopeStr);
 
     host.appendChild(U.el(`<div class="page-head">
-      <span class="ph-kicker">Overview :</span><h1>${state.stream === 'all' ? (state.sector === 'all' ? 'All Value Streams' : D.sectorName(state.sector)) : state.stream}</h1>
+      <span class="ph-kicker">Value Streams · Overview</span><h1>${state.stream === 'all' ? (state.sector === 'all' ? 'All Value Streams' : D.sectorName(state.sector)) : state.stream}</h1>
     </div>`));
+    if (SCR.persona.current() === 'vsl') host.appendChild(SCR.brief.card('vsl', { wide: true }));
 
     const streams = state.sector === 'all'
       ? D.sectors.flatMap(s => s.streams)
@@ -254,7 +255,7 @@ window.SCR = window.SCR || {};
       <button class="backbtn" title="Back to Overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
       </button>
-      <span class="ph-kicker">Node Overview :</span><h1>${U.esc(prod.name)}</h1>
+      <span class="ph-kicker">Node Overview</span><h1>${U.esc(prod.name)}</h1>
     </div>`);
     head.querySelector('.backbtn').addEventListener('click', () => {
       state.view = 'overview'; SCR.navigate('valuestream');
@@ -448,7 +449,7 @@ window.SCR = window.SCR || {};
       if (!rows2.length) return;
       U.openScenario(rows2[0].id, { why: 'Failing ' + rows2[0].name + ', the top node behind ' + prod.name, days: 30 });
     });
-    act.querySelector('#noAct').addEventListener('click', () => U.createAction(prod.name));
+    act.querySelector('#noAct').addEventListener('click', () => U.createAction({ type: 'product', id: prod.id }));
   }
 
   function render(host, opts) {
@@ -462,6 +463,20 @@ window.SCR = window.SCR || {};
 
   SCR.registerPage('valuestream', {
     title: 'Value Streams',
+    context: () => {
+      const D = SCR.data;
+      const prod = state.view === 'node' && state.product ? D.productById(state.product) : null;
+      return {
+        scope: prod ? prod.name : [
+          state.sector === 'all' ? 'All sectors' : D.sectorName(state.sector),
+          state.stream === 'all' ? null : state.stream,
+          state.market === 'all' ? null : (D.marketById(state.market) || {}).name
+        ].filter(Boolean).join(' · '),
+        filters: Object.assign({}, state),
+        products: prod ? [prod] : filtered(),
+        entity: prod ? { type: 'product', id: prod.id, name: prod.name, ref: prod } : null
+      };
+    },
     render
   });
 })();

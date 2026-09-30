@@ -321,7 +321,7 @@ window.SCR = window.SCR || {};
       mbody.querySelectorAll('[data-apply]').forEach(b =>
         b.addEventListener('click', () => {
           const o = r.opts[+b.dataset.apply];
-          U.createAction(o.name + ' — ' + r.node.name);
+          U.createAction({ type: 'scenario', result: Object.assign({}, r, { days: state.days, sev: state.sev, type: state.type }), option: o });
         }));
     }
 
@@ -378,6 +378,14 @@ window.SCR = window.SCR || {};
 
   SCR.registerPage('scenario', {
     title: 'Scenario Studio',
+    context: () => {
+      const ent = SCR.ai.nodeEntity(state.node);
+      return {
+        scope: (ent ? ent.name : state.node) + ' · ' + state.days + 'd · ' + state.sev + '%',
+        entity: ent,
+        scenario: Object.assign({}, state)
+      };
+    },
     crumb: 'Simulate disruptions on the digital twin before they happen',
     render
   });

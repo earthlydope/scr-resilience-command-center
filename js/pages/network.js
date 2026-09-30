@@ -204,7 +204,7 @@ window.SCR = window.SCR || {};
 
     /* ===== Scope bar ===== */
     host.appendChild(U.el(`<div class="page-head">
-      <span class="ph-kicker">Digital twin :</span><h1>Network Explorer</h1>
+      <span class="ph-kicker">Digital twin</span><h1>Network Explorer</h1>
     </div>`));
     const g = buildGraph();
     const tierCount = tier => g.nodes.filter(n => n.tier === tier).length;
@@ -420,6 +420,10 @@ window.SCR = window.SCR || {};
   }
 
   SCR.registerPage('network', {
+    context: () => {
+      const p = SCR.data.productById(state.product);
+      return { scope: p ? p.name : '', entity: p ? { type: 'product', id: p.id, name: p.name, ref: p } : null };
+    },
     title: 'Network Explorer',
     crumb: 'Digital twin · multi-tier dependency graph',
     render

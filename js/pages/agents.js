@@ -155,7 +155,7 @@ window.SCR = window.SCR || {};
     function renderQueue() {
       qBody.innerHTML = '';
       D.recommendations.forEach(r => {
-        const node = U.el(`<div class="reco ${r.status !== 'pending' ? 'done' : ''}">
+        const node = U.el(`<div class="reco ${r.status !== 'pending' ? 'done' : ''} ${r.fresh && r.status === 'pending' ? 'new' : ''}">
           <div class="reco-head">
             <span class="reco-title">${U.esc(r.title)}</span>
             <span class="badge neutral plain" style="cursor:pointer" data-alert="${U.esc(r.linked)}">${U.esc(r.linked)}</span>
@@ -171,7 +171,7 @@ window.SCR = window.SCR || {};
             ${r.status === 'pending'
               ? '<button class="btn btn-sm btn-good" data-op="approve">Approve</button><button class="btn btn-sm btn-ghost" data-op="dismiss">Dismiss</button>'
               : r.status === 'approved'
-                ? '<span class="approved-tag">✓ Approved — execution ticket created</span>'
+                ? `<span class="approved-tag">✓ Approved — ${r.actionId ? U.esc(r.actionId) + ' is on the tracker' : 'execution ticket created'}</span>`
                 : '<span class="dismissed-tag">Dismissed</span>'}
           </div>
         </div>`);
@@ -179,14 +179,15 @@ window.SCR = window.SCR || {};
         if (linkBadge) linkBadge.addEventListener('click', e => { e.stopPropagation(); U.openAlert(linkBadge.dataset.alert); });
         node.querySelectorAll('[data-op]').forEach(b => b.addEventListener('click', () => {
           if (b.dataset.op === 'approve') {
-            r.status = 'approved';
+            const act = SCR.work.approve(r);
             U.toast('Recommendation approved',
-              `Execution & Workflow Agent opened a ticket for <strong>${U.esc(r.id)}</strong>, notified approvers and scheduled the RRE re-score.`, 'good');
+              `Execution & Workflow Agent opened <strong>${U.esc(act ? act.id : r.id)}</strong> on the tracker, notified approvers and scheduled the RRE re-score.`, 'good',
+              { label: 'View in tracker', run: () => SCR.work.goToTracker() });
           } else {
             r.status = 'dismissed';
             U.toast('Recommendation dismissed', `${r.id} archived with your rationale requested.`, '');
           }
-          renderQueue();
+          if (qBody.isConnected) renderQueue(); // approval re-renders the page itself
         }));
         qBody.appendChild(node);
       });
@@ -225,7 +226,7 @@ window.SCR = window.SCR || {};
     const feedWrap = U.el('<div class="feed"></div>');
     D.feed.forEach(f => {
       const a = D.agents.find(x => x.key === f.agent) || { name: f.agent, color: 1 };
-      const item = U.el(`<div class="feed-item" style="cursor:pointer">
+      const item = U.el(`<div class="feed-item ${f.fresh ? 'fresh' : ''}" style="cursor:pointer">
         <span style="width:9px;height:9px;border-radius:50%;background:var(--series-${a.color});flex-shrink:0;margin-top:6px"></span>
         <div class="feed-body">
           <span class="f-agent" style="color:var(--series-${a.color})">${U.esc(a.name)}</span>
