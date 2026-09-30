@@ -1,0 +1,5 @@
+# never upload local secrets or dev-only files
+.env*
+.claude
+.DS_Store
+serve.js
