@@ -125,7 +125,7 @@ window.SCR = window.SCR || {};
     grid.appendChild(ctrl);
     ctrl.querySelector('.card-body').innerHTML = `
       <div class="sim-panel">
-        <div class="sim-field">
+        <div class="sim-field" data-hint="w-sc-node">
           <label>Node to disrupt</label>
           <select id="scNode">
             <optgroup label="Suppliers">
@@ -139,29 +139,29 @@ window.SCR = window.SCR || {};
             </optgroup>
           </select>
         </div>
-        <div class="sim-field">
+        <div class="sim-field" data-hint="w-sc-type">
           <label>Disruption type</label>
           <select id="scType">${TYPES.map(t => `<option ${state.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select>
         </div>
-        <div class="sim-field">
+        <div class="sim-field" data-hint="w-sc-days">
           <label>Duration</label>
           <div class="range-row">
             <input type="range" id="scDays" min="7" max="90" step="1" value="${state.days}" />
             <span class="range-val" id="scDaysVal">${state.days} days</span>
           </div>
         </div>
-        <div class="sim-field">
+        <div class="sim-field" data-hint="w-sc-sev">
           <label>Severity — share of node capacity lost</label>
           <div class="range-row">
             <input type="range" id="scSev" min="25" max="100" step="5" value="${state.sev}" />
             <span class="range-val" id="scSevVal">${state.sev}%</span>
           </div>
         </div>
-        <div class="sim-field">
+        <div class="sim-field" data-hint="w-sc-presets">
           <label>Presets</label>
           <div class="chip-row">${PRESETS.map((p, i) => `<button class="chip" data-preset="${i}">${p.label}</button>`).join('')}</div>
         </div>
-        <button class="btn btn-primary" id="scSave">Save as continuity playbook</button>
+        <button class="btn btn-primary" id="scSave" data-hint="w-sc-save">Save as continuity playbook</button>
       </div>`;
 
     /* ===== Output panel ===== */
@@ -315,7 +315,7 @@ window.SCR = window.SCR || {};
             <span class="rm">Time to effect<strong style="font-size:14px">${U.esc(o.time)}</strong></span>
           </div>
           <div class="reco-actions">
-            <button class="btn btn-sm btn-good" data-apply="${i}">Create action</button>
+            <button class="btn btn-sm btn-good" data-apply="${i}" data-hint="w-sc-create">Create action</button>
           </div>
         </div>`).join('');
       mbody.querySelectorAll('[data-apply]').forEach(b =>
@@ -374,7 +374,12 @@ window.SCR = window.SCR || {};
     SCR.navigate('scenario');
   }
 
-  SCR.scenario = { simulate, openStudio };
+  /** The studio's design, readable and settable by other surfaces (the mobile
+      Simulate tab drives the same engine and state). */
+  const getState = () => Object.assign({}, state);
+  function setState(partial) { Object.assign(state, partial || {}); return getState(); }
+
+  SCR.scenario = { simulate, openStudio, getState, setState, TYPES, PRESETS };
 
   SCR.registerPage('scenario', {
     title: 'Scenario Studio',

@@ -527,6 +527,70 @@ input, select, textarea { font-family: inherit; letter-spacing: inherit; }
 }
 .persona-opt .po-check { width: 18px; height: 18px; flex-shrink: 0; }
 
+/* ============ Guide: the role's jobs + the explanation switch ============ */
+a.icon-btn { text-decoration: none; }
+.guide-btn.on { color: var(--accent); }
+.guide-btn.on::after {
+  content: ""; position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 0 2px var(--surface);
+}
+.guide-pop {
+  display: none;
+  position: absolute; top: calc(var(--appbar-h) + 2px);
+  width: 360px; max-width: calc(100vw - 24px);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+  border: 1px solid var(--glass-edge);
+  border-radius: 22px;
+  box-shadow: var(--glass-shadow), var(--shadow-lg);
+  z-index: 96; padding: 14px 10px 10px; color: var(--ink);
+  transform-origin: top right;
+}
+.guide-pop.open { display: block; animation: popIn .26s var(--ease-out); }
+.gp-head { padding: 0 8px 10px; }
+.gp-eyebrow { display: block; font-size: 12px; font-weight: 600; color: var(--accent-strong); margin-bottom: 2px; }
+.gp-head b { display: block; font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.024em; }
+.gp-lens { display: block; font-size: 13px; color: var(--ink-3); line-height: 1.4; margin-top: 2px; }
+.gp-tasks { list-style: none; display: grid; gap: 2px; margin: 0 0 6px; }
+.gp-tasks button {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 8px; border: none; background: none; border-radius: 14px; text-align: left; color: var(--ink);
+  transition: background .15s;
+}
+.gp-tasks button:hover { background: var(--fill-3); }
+.gp-tasks svg { width: 14px; height: 14px; color: var(--ink-4); flex-shrink: 0; }
+.gp-n {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; color: #fff;
+  display: grid; place-items: center; font-size: 12.5px; font-weight: 700; font-family: var(--font-rounded);
+}
+.gp-t { flex: 1; min-width: 0; }
+.gp-t b { display: block; font-size: 14.5px; font-weight: 600; letter-spacing: -0.015em; }
+.gp-t small { display: block; font-size: 12.5px; color: var(--ink-3); line-height: 1.38; margin-top: 1px; }
+.gp-t em { display: inline-block; font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--accent-strong); margin-top: 3px; }
+.gp-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 2px 2px 8px; padding: 10px 12px; border-radius: 14px; background: var(--fill-3); cursor: pointer;
+}
+.gp-row b { display: block; font-size: 14px; font-weight: 600; }
+.gp-row small { display: block; font-size: 12px; color: var(--ink-3); }
+.gp-foot { display: flex; justify-content: space-between; gap: 10px; padding: 4px 10px 2px; }
+.gp-foot a { font-size: 13px; font-weight: 600; color: var(--accent-strong); text-decoration: none; }
+.gp-foot a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* iOS switch */
+.ios-switch {
+  -webkit-appearance: none; appearance: none; flex-shrink: 0;
+  width: 46px; height: 28px; border-radius: 999px; position: relative; cursor: pointer;
+  background: var(--fill); transition: background .25s var(--ease-out);
+}
+.ios-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  transition: transform .3s var(--spring);
+}
+.ios-switch:checked { background: var(--status-good); }
+.ios-switch:checked::after { transform: translateX(18px); }
+
 /* ============ Breadcrumb (window title, left of the toolbar) ============ */
 .crumbbar {
   flex: 1 1 auto;
@@ -1805,7 +1869,7 @@ textarea.fld { resize: vertical; min-height: 72px; line-height: 1.5; }
   .card, .kpi-card, .hero, .ai-card, .filterbar, .list-panel, .agent-card, .persona-card,
   .fact, .reco, .alert-row, .playbook, .cmp, .sim-out-note, .ans-fact, .draft, .ai-note,
   .ins-agent, .notif-summary, .modal, .drawer, .copilot, .sidebar, .toast, .notif-panel,
-  .persona-menu, .search-results, .ai-item, .fld, .ai-ring::before,
+  .persona-menu, .guide-pop, .search-results, .ai-item, .fld, .ai-ring::before,
   .copilot::before, .copilot::after, .bulb-card::after {
     corner-shape: squircle;
   }
@@ -1814,7 +1878,7 @@ textarea.fld { resize: vertical; min-height: 72px; line-height: 1.5; }
   .modal, .drawer { border-radius: 42px; }
   .copilot { border-radius: 44px; }
   .toast, .notif-panel { border-radius: 32px; }
-  .persona-menu, .search-results { border-radius: 28px; }
+  .persona-menu, .guide-pop, .search-results { border-radius: 28px; }
   .draft, .ai-note, .notif-summary, .fld { border-radius: 22px; }
 }
 

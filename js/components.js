@@ -90,12 +90,21 @@ window.SCR = window.SCR || {};
   const SPARK = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 4c.55 4.3 2.2 6.9 6.5 8.5-4.3 1.6-5.95 4.2-6.5 8.5-.55-4.3-2.2-6.9-6.5-8.5C8.8 10.9 10.45 8.3 11 4Z"/><path d="M18.5 2.5c.22 1.5.8 2.4 2.3 2.9-1.5.5-2.08 1.4-2.3 2.9-.22-1.5-.8-2.4-2.3-2.9 1.5-.5 2.08-1.4 2.3-2.9Z"/></svg>';
   /* Apple Health summary tile: coloured glyph + title, a chevron when it
      drills, a big rounded figure, one quiet line underneath. */
+  /** Guide copy for a tile: the copilot's definition of the KPI when it has one. */
+  function kpiHint(it) {
+    const def = SCR.copilot && SCR.copilot.explainKpi ? SCR.copilot.explainKpi(it.label) : null;
+    const sub = it.sub ? it.sub.charAt(0).toUpperCase() + it.sub.slice(1) + '.' : '';
+    const body = def ? def.what : sub;
+    return (body + (it.onClick ? ' Click to open the analysis behind it.' : '')).trim();
+  }
+
   function kpiStrip(items, opts) {
     const wrap = el('<div class="kpi-cards"></div>');
     items.forEach((it, i) => {
       const color = typeof it.color === 'string' ? it.color : CHIP_COLORS[(it.color != null ? it.color : i) % CHIP_COLORS.length];
       const pill = it.subClass === 'good' || it.subClass === 'bad';
-      const node = el(`<div class="kpi-card ${it.onClick ? 'clickable' : ''}" style="--kpi-accent:${color}" ${it.onClick ? 'role="button" tabindex="0"' : ''}>
+      const node = el(`<div class="kpi-card ${it.onClick ? 'clickable' : ''}" style="--kpi-accent:${color}" ${it.onClick ? 'role="button" tabindex="0"' : ''}
+        data-hint="w-kpi" data-hint-title="${esc(it.label)}" data-hint-body="${esc(kpiHint(it))}">
         <div class="kc-top">
           <span class="k-title"><span class="kpi-glyph">${CHIP_ICONS[it.icon] || CHIP_ICONS.box}</span><span class="k-label">${esc(it.label)}</span></span>
           ${it.onClick ? CHEV : ''}
@@ -120,7 +129,7 @@ window.SCR = window.SCR || {};
       wrap.appendChild(node);
     });
     if (opts && opts.bulb) {
-      const bulb = el(`<button class="kpi-card bulb-card" title="Generated insights for this view">
+      const bulb = el(`<button class="kpi-card bulb-card" title="Generated insights for this view" data-hint="w-summarize">
         <span class="bulb">${SPARK}</span>
         <span class="bulb-label">Summarize this view<span class="bulb-sub">Written by the agents from live data</span></span>
       </button>`);
@@ -146,7 +155,7 @@ window.SCR = window.SCR || {};
   /* ---------------- Filter bar (clean, always-visible inline filters) ---------------- */
   /** fields: [{id, label, options:[{v,label,sel}], onChange}] */
   function filterBlock(fields, note) {
-    const wrap = el(`<div class="filterbar">
+    const wrap = el(`<div class="filterbar" data-hint="w-filters">
       <span class="fb-lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg>Filters</span>
     </div>`);
     fields.forEach(f => {
@@ -229,9 +238,10 @@ window.SCR = window.SCR || {};
   /* ---------------- Card scaffold ---------------- */
   /** cfg: {title, sub, cols (grid span), chartClass, flush, actions: HTMLElement[]} */
   function card(cfg) {
+    const hint = cfg.hint || (cfg.sub ? cfg.sub.charAt(0).toUpperCase() + cfg.sub.slice(1) + '.' : '');
     const node = el(`<div class="card ${cfg.cols ? 'col-' + cfg.cols : ''}">
       <div class="card-head">
-        <div><div class="card-title">${esc(cfg.title)}</div>
+        <div ${hint ? `data-hint="w-card" data-hint-title="${esc(cfg.title)}" data-hint-body="${esc(hint + (cfg.noInsight ? '' : ' AI insights explains it in words.'))}"` : ''}><div class="card-title">${esc(cfg.title)}</div>
         ${cfg.sub ? `<div class="card-sub">${esc(cfg.sub)}</div>` : ''}</div>
         <div class="card-actions"></div>
       </div>
@@ -316,7 +326,7 @@ window.SCR = window.SCR || {};
   }
 
   function insightBtn(title, insight) {
-    const b = el(`<button class="insight-btn" title="AI agent insights for “${esc(title)}”"><span class="ib-orb">${SPARK}</span><span>AI insights</span></button>`);
+    const b = el(`<button class="insight-btn" title="AI agent insights for “${esc(title)}”" data-hint="w-insight"><span class="ib-orb">${SPARK}</span><span>AI insights</span></button>`);
     b.addEventListener('click', e => { e.stopPropagation(); openInsight(title, insight); });
     return b;
   }
@@ -373,7 +383,7 @@ window.SCR = window.SCR || {};
 
       const row = el('<div class="ins-actions"></div>');
       if (best) {
-        const act = el('<button class="btn btn-primary">Create action from best plan</button>');
+        const act = el('<button class="btn btn-primary" data-hint="w-d-act">Create action from best plan</button>');
         act.addEventListener('click', () => SCR.work.openSheet({ type: 'scenario', result: r, option: best }));
         row.appendChild(act);
       }
@@ -383,7 +393,7 @@ window.SCR = window.SCR || {};
         SCR.scenario.openStudio(nodeId, opts);
       });
       row.appendChild(full);
-      const ask = el(`<button class="btn">Ask Copilot</button>`);
+      const ask = el(`<button class="btn" data-hint="w-d-ask">Ask Copilot</button>`);
       ask.addEventListener('click', () => SCR.copilot && SCR.copilot.ask(`What if ${r.node.name} fails for ${r.days} days?`, { open: true }));
       row.appendChild(ask);
       body.appendChild(row);
@@ -448,7 +458,7 @@ window.SCR = window.SCR || {};
   }
   /** "Ask Copilot" from inside a 360° drawer: the drawer's entity is the context. */
   function askButton(prompt) {
-    const b = el(`<button class="btn btn-sm">${SPARK}Ask Copilot</button>`);
+    const b = el(`<button class="btn btn-sm" data-hint="w-d-ask">${SPARK}Ask Copilot</button>`);
     b.addEventListener('click', () => SCR.copilot && SCR.copilot.ask(prompt, { open: true }));
     return b;
   }
@@ -538,8 +548,8 @@ window.SCR = window.SCR || {};
         </div>
         <div class="drawer-section">
           <div class="flex aic gap8 wrap" id="drawerBtns">
-            <button class="btn btn-primary btn-sm" id="drawerAct">Create mitigation action</button>
-            <button class="btn btn-sm" id="drawerSim">Simulate failure</button>
+            <button class="btn btn-primary btn-sm" id="drawerAct" data-hint="w-d-act">Create mitigation action</button>
+            <button class="btn btn-sm" id="drawerSim" data-hint="w-d-sim">Simulate failure</button>
           </div>
         </div>`;
 
@@ -623,7 +633,7 @@ window.SCR = window.SCR || {};
           </div>
         </div>
         <div class="drawer-section flex aic gap8 wrap" id="dmBtns">
-          <button class="btn btn-primary btn-sm" id="dmAct">Create mitigation action</button>
+          <button class="btn btn-primary btn-sm" id="dmAct" data-hint="w-d-act">Create mitigation action</button>
         </div>`;
       body.querySelector('#dmSup').appendChild(table([
         { h: 'Supplier', cell: s => `<span class="cell-main">${esc(s.name)}</span><span class="cell-sub">${esc(s.city)}, ${esc(s.country)}</span>` },
@@ -682,7 +692,7 @@ window.SCR = window.SCR || {};
           <div style="display:flex;flex-wrap:wrap;gap:6px">${mkNames.map(n => `<span class="badge neutral plain">${esc(n)}</span>`).join('')}</div>
         </div>
         <div class="drawer-section flex aic gap8 wrap" id="dpBtns">
-          <button class="btn btn-primary btn-sm" id="dpAct">Create mitigation action</button>
+          <button class="btn btn-primary btn-sm" id="dpAct" data-hint="w-d-act">Create mitigation action</button>
         </div>`;
       body.querySelector('#dpMats').appendChild(table([
         { h: 'Component', cell: m => `<span class="cell-main">${esc(m.name)}</span><span class="cell-sub">${esc(m.sub)}</span>` },
@@ -757,8 +767,8 @@ window.SCR = window.SCR || {};
         </div>
         <div class="drawer-section flex aic gap8 wrap" id="dsBtns">
           ${isPlant ? '<button class="btn btn-primary btn-sm" id="dsSite">Open Site Resilience view</button>' : ''}
-          <button class="btn btn-sm" id="dsSim">Simulate outage</button>
-          <button class="btn btn-sm" id="dsAct">Create mitigation action</button>
+          <button class="btn btn-sm" id="dsSim" data-hint="w-d-sim">Simulate outage</button>
+          <button class="btn btn-sm" id="dsAct" data-hint="w-d-act">Create mitigation action</button>
         </div>`;
       body.querySelectorAll('[data-prod]').forEach(n =>
         n.addEventListener('click', () => openProduct(n.dataset.prod)));
@@ -817,7 +827,7 @@ window.SCR = window.SCR || {};
             </div>
           </div>`).join('')}</div>` : ''}
         <div class="drawer-section flex aic gap8 wrap" id="daBtns">
-          <button class="btn btn-primary btn-sm" id="daAct">Create mitigation action</button>
+          <button class="btn btn-primary btn-sm" id="daAct" data-hint="w-d-act">Create mitigation action</button>
         </div>`;
       body.querySelector('#daAct').addEventListener('click', () => createAction({ type: 'alert', id: a.id }));
       body.querySelector('#daBtns').appendChild(askButton(`How do I resolve ${a.id}?`));

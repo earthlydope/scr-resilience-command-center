@@ -763,7 +763,7 @@ window.SCR = window.SCR || {};
     opts = opts || {};
     const items = itemsFor(pid);
     const node = SCR.ui.el(`<section class="ai-card ai-ring ${opts.wide ? 'wide' : ''}">
-      <div class="ai-head">
+      <div class="ai-head" data-hint="w-brief">
         <span class="ai-mark">${SPARK}</span>
         <div class="ai-titles">
           <div class="ai-title">For you today</div>

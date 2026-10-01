@@ -169,7 +169,7 @@ window.SCR = window.SCR || {};
           </div>
           <div class="reco-actions">
             ${r.status === 'pending'
-              ? '<button class="btn btn-sm btn-good" data-op="approve">Approve</button><button class="btn btn-sm btn-ghost" data-op="dismiss">Dismiss</button>'
+              ? '<button class="btn btn-sm btn-good" data-op="approve" data-hint="w-reco-approve">Approve</button><button class="btn btn-sm btn-ghost" data-op="dismiss" data-hint="w-reco-dismiss">Dismiss</button>'
               : r.status === 'approved'
                 ? `<span class="approved-tag">✓ Approved — ${r.actionId ? U.esc(r.actionId) + ' is on the tracker' : 'execution ticket created'}</span>`
                 : '<span class="dismissed-tag">Dismissed</span>'}

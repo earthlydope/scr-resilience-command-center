@@ -14,43 +14,13 @@ SCR.pages = SCR.pages || {};
 SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
 
 (function () {
-  /* ================= Persona registry ================= */
-  const PERSONAS = [
-    {
-      id: 'rrl', short: 'R&R', name: 'Risk & Resilience Leader', color: '#af52de', tag: 'Enterprise exposure',
-      role: 'Enterprise-wide view of vulnerabilities across value streams, nodes and geographies.',
-      lens: 'Where is the largest exposure, and which mitigation deserves investment first?',
-      home: 'executive',
-      suggests: ['What needs my attention today?', 'What should I approve first?', 'Top 5 risk nodes by AVAR', 'Draft the executive brief']
-    },
-    {
-      id: 'vsl', short: 'VSL', name: 'Value Chain / Stream Leader', color: '#30b0c7', tag: 'Products & value streams',
-      role: 'Keeps products, brands and value streams running despite node failures.',
-      lens: 'Which SKUs are fragile, and which node breaks them first?',
-      home: 'valuestream',
-      suggests: ['Most fragile products', 'What breaks AirPure Compact Purifier first?', 'What if Taicang MicroControls fails for 45 days?', 'Which products have TTR > TTS?']
-    },
-    {
-      id: 'cat', short: 'CAT', name: 'Category Leader', color: '#ff9500', tag: 'Suppliers & materials',
-      role: 'Owns supplier and material risk — sourcing, qualification and commercial mitigation.',
-      lens: 'Which materials need alternates, buffers or new contract terms?',
-      home: 'category',
-      suggests: ['Mitigation plan for single-source materials', 'Top 5 suppliers by AVAR', 'Who else can supply closures?', 'Draft an email to Taicang MicroControls']
-    },
-    {
-      id: 'site', short: 'SITE', name: 'SC Site Leader', color: '#007aff', tag: 'Plant & DC continuity',
-      role: 'Protects plant & DC continuity: inbound materials, capacity and outbound supply.',
-      lens: 'Can my site keep running, and what is the playbook if it cannot?',
-      home: 'site',
-      suggests: ['Which plant has the shortest cover?', 'Status of Pune plant', 'What if Pune plant goes down for 21 days?', 'What is overdue?']
-    }
-  ];
-  const DEFAULT_PERSONA = 'rrl';
-  let currentPersona = localStorage.getItem('scr-persona') || DEFAULT_PERSONA;
-  if (!PERSONAS.some(p => p.id === currentPersona)) currentPersona = DEFAULT_PERSONA;
-
-  const getPersona = id => PERSONAS.find(p => p.id === id) || PERSONAS[0];
-  const initials = name => name.split(/[\s/&·]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  /* ================= Persona registry =================
+     The roles live in personas.js so the chooser, the web app and the mobile
+     app present the same job for each one. */
+  const PERSONAS = SCR.personas.list();
+  let currentPersona = SCR.personas.stored();
+  const getPersona = SCR.personas.byId;
+  const initials = SCR.personas.initials;
 
   /* ================= Nav as metadata =================
      `personas` omitted → visible to every lens. */
@@ -111,7 +81,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
   function setPersona(id, opts) {
     const p = getPersona(id);
     currentPersona = p.id;
-    localStorage.setItem('scr-persona', p.id);
+    SCR.personas.remember(p.id);
     renderPersonaPill();
     buildNav();
     if (SCR.copilot && SCR.copilot.personaChanged) SCR.copilot.personaChanged(p);
@@ -174,7 +144,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
       if (group.heading) nav.appendChild(SCR.ui.el(`<div class="nav-section">${group.heading}</div>`));
       group.items.forEach(item => {
         const badge = item.badge ? item.badge() : 0;
-        const btn = SCR.ui.el(`<button class="nav-item" data-key="${item.key}" title="${item.label}">
+        const btn = SCR.ui.el(`<button class="nav-item" data-key="${item.key}" title="${item.label}" data-hint="nav-${item.key}">
           ${icons[item.key] || ''}<span>${item.label}</span>
           ${badge ? `<span class="nav-badge">${badge}</span>` : ''}
         </button>`);
@@ -375,6 +345,65 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     });
   }
 
+  /* ================= Guide: the role's jobs + hover explanations ================= */
+  const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+  function renderGuidePop() {
+    const pop = document.getElementById('guidePop');
+    const p = getPersona(currentPersona);
+    const esc = SCR.ui.esc;
+    pop.innerHTML = `
+      <div class="gp-head">
+        <span class="gp-eyebrow">Guide · how this role works</span>
+        <b>${esc(p.name)}</b>
+        <span class="gp-lens">${esc(p.lens)}</span>
+      </div>
+      <ol class="gp-tasks">${p.tasks.map((t, i) => `
+        <li><button type="button" data-go="${t.key}">
+          <span class="gp-n" style="background:${p.color}">${i + 1}</span>
+          <span class="gp-t"><b>${esc(t.t)}</b><small>${esc(t.d)}</small><em>${esc(t.where)}</em></span>
+          ${CHEVRON}
+        </button></li>`).join('')}
+      </ol>
+      <label class="gp-row">
+        <span><b>Hover explanations</b><small>Point at any control to see what it does</small></span>
+        <input type="checkbox" class="ios-switch" ${SCR.guide.enabled() ? 'checked' : ''} />
+      </label>`;
+    pop.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+      pop.classList.remove('open');
+      const k = b.dataset.go;
+      if (k === 'copilot') SCR.copilot.open();
+      else if (SCR.pages[k]) navigate(k);
+    }));
+    pop.querySelector('.ios-switch').addEventListener('change', e => SCR.guide.setEnabled(e.target.checked));
+  }
+
+  function initGuide() {
+    SCR.guide.init({ mode: 'web' });
+    const btn = document.getElementById('guideBtn');
+    const pop = document.getElementById('guidePop');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (!pop.classList.contains('open')) {
+        renderGuidePop();
+        const r = btn.getBoundingClientRect();
+        pop.style.right = Math.max(12, window.innerWidth - r.right - 6) + 'px';
+      }
+      pop.classList.toggle('open');
+      SCR.guide.clear();
+    });
+    document.addEventListener('click', e => {
+      if (!pop.contains(e.target) && !btn.contains(e.target)) pop.classList.remove('open');
+    });
+    // first visit this session: say how the guide works
+    let told = false;
+    try { told = sessionStorage.getItem('scr-guide-told') === '1'; } catch (_) { told = false; }
+    if (!told && SCR.guide.enabled()) {
+      setTimeout(() => SCR.ui.toast('Guide is on',
+        'Point at any control for what it does and why. The <strong>?</strong> button lists your role’s jobs and turns explanations off.', 'info'), 900);
+      try { sessionStorage.setItem('scr-guide-told', '1'); } catch (_) { /* private mode */ }
+    }
+  }
+
   /* ================= Overlays ================= */
   function initOverlays() {
     document.getElementById('drawerClose').addEventListener('click', SCR.ui.closeDrawer);
@@ -386,7 +415,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         SCR.ui.closeDrawer(); SCR.ui.closeModal(); SCR.copilot && SCR.copilot.close();
-        ['personaMenu', 'notifPanel', 'searchResults'].forEach(id => document.getElementById(id).classList.remove('open'));
+        ['personaMenu', 'notifPanel', 'searchResults', 'guidePop'].forEach(id => document.getElementById(id).classList.remove('open'));
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); SCR.copilot && SCR.copilot.toggle(); }
       const typing = /^(input|textarea|select)$/i.test((e.target && e.target.tagName) || '') || (e.target && e.target.isContentEditable);
@@ -402,6 +431,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     initSearch();
     initOverlays();
     initSideToggle();
+    initGuide();
     if (SCR.copilot && SCR.copilot.init) SCR.copilot.init();
     setPersona(currentPersona);
   });

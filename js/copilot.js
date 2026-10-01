@@ -26,6 +26,7 @@ window.SCR = window.SCR || {};
   const usd = v => SCR.fmt.usdM(v);
 
   let panel, thread, input, ctxBox;
+  let host = null;                 // another surface (the mobile app) can own the thread
   let useContext = true;           // the chip's × detaches context until it next changes
   let lastAsked = '';
   let ctxChangedAt = 0;
@@ -137,6 +138,7 @@ window.SCR = window.SCR || {};
   }
 
   function ask(text, opts) {
+    if (host) return host(text, opts || {});
     opts = opts || {};
     if (opts.open) open();
     text = String(text || '').trim();
@@ -222,14 +224,18 @@ window.SCR = window.SCR || {};
     }
   }
 
+  /** Context-tuned suggestions first, then the persona's own. */
+  function suggestions() {
+    const list = [];
+    contextSuggests(context()).concat(personaSuggests).forEach(q => { if (!list.includes(q)) list.push(q); });
+    return list.slice(0, 7);
+  }
+
   function renderSuggests() {
     const sug = document.getElementById('copilotSuggests');
     if (!sug) return;
-    const c = context();
-    const list = [];
-    contextSuggests(c).concat(personaSuggests).forEach(q => { if (!list.includes(q)) list.push(q); });
     sug.innerHTML = '';
-    list.slice(0, 7).forEach(q => {
+    suggestions().forEach(q => {
       const chip = el(`<button class="chip">${esc(q)}</button>`);
       chip.addEventListener('click', () => ask(q));
       sug.appendChild(chip);
@@ -1643,7 +1649,22 @@ Delivery: ${usd(k.mitigatedYtd)} of AVAR retired this year; ${overdue.length} ${
     welcome();
   }
 
+  /** Plain-language definition of a headline KPI by its label (used by the guide). */
+  function explainKpi(label) {
+    const def = matchKpi(String(label || '').toLowerCase());
+    return def ? { label: def.label, what: def.what, how: def.how } : null;
+  }
+
+  /** Hand the conversation to another surface: `fn(text, opts)` replaces the
+      dock's thread, so answers' follow-up chips keep working there. */
+  function useHost(fn) { host = fn || null; }
+  function setContextEnabled(on) { useContext = !!on; }
+  const contextEnabled = () => useContext;
+
   // `route` is exported for diagnostics: it lets the intent layer be exercised
   // without the typing delay or the DOM.
-  SCR.copilot = { init, open, close, toggle, ask, discuss, focusInput, setSuggests, personaChanged, reset, route };
+  SCR.copilot = {
+    init, open, close, toggle, ask, discuss, focusInput, setSuggests, personaChanged, reset, route,
+    suggestions, explainKpi, useHost, setContextEnabled, contextEnabled, AGENTS
+  };
 })();

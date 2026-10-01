@@ -120,7 +120,7 @@ window.SCR = window.SCR || {};
     today.appendChild(U.el(`<div class="hero">
       <div>
         <div class="today-eyebrow"><span class="live-dot"></span>Executive Summary · ${U.esc(SCR.brief.asOfLong())}</div>
-        <h1 class="today-title">${SCR.brief.greeting()}. <span class="ai-text">${F.usdM(D.kpis.totalAVAR)}</span> of adjusted value is at risk across ${D.products.length} products.</h1>
+        <h1 class="today-title" data-hint="w-today">${SCR.brief.greeting()}. <span class="ai-text">${F.usdM(D.kpis.totalAVAR)}</span> of adjusted value is at risk across ${D.products.length} products.</h1>
         <p class="today-sub">End-to-end visibility of vulnerabilities across every product, material, supplier, plant, DC and market.
           Sensing, impact maths and mitigation run continuously on the agentic layer — you approve the moves that matter.</p>
       </div>

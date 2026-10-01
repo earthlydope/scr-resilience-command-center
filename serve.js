@@ -18,9 +18,11 @@ const mime = {
 
 http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
-  if (urlPath === '/') urlPath = '/index.html';
-  const file = path.join(root, path.normalize(urlPath));
+  if (urlPath.endsWith('/')) urlPath += 'index.html';
+  let file = path.join(root, path.normalize(urlPath));
   if (!file.startsWith(root)) { res.writeHead(403); return res.end('Forbidden'); }
+  // clean URLs, as vercel.json serves them: /web → web.html
+  if (!path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
   fs.readFile(file, (err, buf) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
     res.writeHead(200, { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream' });

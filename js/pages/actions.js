@@ -68,7 +68,7 @@ window.SCR = window.SCR || {};
     host.appendChild(grid);
 
     /* ===== Alert inbox ===== */
-    const segSev = U.el(`<div class="seg">
+    const segSev = U.el(`<div class="seg" data-hint="w-inbox-seg">
       <button data-s="all" class="${state.sevFilter === 'all' ? 'active' : ''}">All</button>
       <button data-s="critical" class="${state.sevFilter === 'critical' ? 'active' : ''}">Critical</button>
       <button data-s="high" class="${state.sevFilter === 'high' ? 'active' : ''}">High</button>
@@ -124,8 +124,8 @@ window.SCR = window.SCR || {};
           <div class="a-side">
             ${U.statusBadge(a.status)}
             <div class="flex gap8">
-              ${a.status === 'open' ? `<button class="btn btn-sm" data-op="ack">Acknowledge</button>
-              <button class="btn btn-sm btn-primary" data-op="assign">Assign</button>` :
+              ${a.status === 'open' ? `<button class="btn btn-sm" data-op="ack" data-hint="w-al-ack">Acknowledge</button>
+              <button class="btn btn-sm btn-primary" data-op="assign" data-hint="w-al-assign">Assign</button>` :
               a.status !== 'closed' ? `<button class="btn btn-sm btn-good" data-op="close">Close</button>` : ''}
             </div>
           </div>
@@ -277,6 +277,7 @@ window.SCR = window.SCR || {};
     /* ===== Action tracker ===== */
     const trackCard = U.card({
       title: 'Mitigation action tracker', sub: 'owner, due date, expected AVAR reduction and residual risk before/after',
+      hint: 'Every mitigation with owner, due date, cost, AVAR cut and residual risk before → after. Actions created by you or the copilot are highlighted.',
       cols: 12, flush: true,
       insight: () => {
         const acts = D.actions || [];
