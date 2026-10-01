@@ -36,6 +36,30 @@ node serve.js 4190          # or: python3 -m http.server 4190
 
 Opening `index.html` directly from the filesystem also works (no ES modules).
 
+## Two ways in: mobile and web
+
+As in the HCCB hub, the root (`index.html`) is a **chooser**: pick a role, then the
+**mobile app** (`mobile.html`) or the **web application** (`web.html`). Both run on the
+same data, agents and copilot, and the role carries across (`?as=rrl|vsl|cat|site` links
+open either one as a given role). A role map on the chooser explains what each role does
+and where.
+
+**The mobile app** is an iPhone build on a presentation stage — large titles that
+collapse into a glass nav bar, push navigation, bottom sheets, a floating Liquid Glass tab
+bar, confirmations in the Dynamic Island and the Siri edge glow while the copilot thinks.
+It is tailored per role: five tabs — **Today**, the role's own list, **Alerts**,
+**Simulate**, **Ask** — where the second tab is *Decisions* (Risk & Resilience Leader),
+*Products* (Value Chain Leader), *Suppliers* (Category Leader) or *Sites* (Site Leader).
+Today carries the role's headline, the "For you today" briefing, four role shortcuts and a
+watchlist; alerts default to the ones routed to that role. Approving, creating actions,
+what-ifs and the copilot work exactly as on the web.
+
+**The guide** explains the product as you use it: point at any control and it is ringed,
+a curved arrow is drawn to it and a card says what it does for the current role — beside
+the element on the web, in the gutter next to the phone on mobile. The web app's **?**
+button lists the role's three jobs with links to where they happen; the explanations can be
+switched off on every screen.
+
 ## Pages × personas × charts
 
 | Page | Persona / purpose | Chart forms |
@@ -118,8 +142,13 @@ queue, alerts and the copilot's attributed answers.
 ## Structure
 
 ```
-index.html            shell (sidebar, topbar, drawers, copilot, modal)
+index.html            the chooser: role → mobile app or web application
+web.html              web application shell (sidebar, toolbar, drawers, copilot, modal)
+mobile.html           mobile app shell (stage, iPhone frame, tab bar, sheets)
 css/styles.css        design system (light/dark via CSS custom properties)
+css/mobile.css        the iPhone app: device, iOS navigation, lists, sheets, tab bar
+css/landing.css       the chooser
+css/guide.css         the hover guide (shared)
 js/theme.js           design tokens → ECharts bridge, formatters, TTR/TTS/RI helpers
 js/data.js            synthetic dataset + the resilience engine (single source of truth)
 js/charts.js          chart lifecycle + waterfall/mekko/gantt/sparkline/combo builders
@@ -127,7 +156,11 @@ js/components.js      shared UI + the 360° detail drawers
 js/intelligence.js    context, entity resolution, action/proposal engine, daily briefing
 js/copilot.js         Resilience Copilot (intent router + answers)
 js/pages/*.js         one module per page (self-registering)
-js/app.js             router, persona registry + lens switcher, sidebar nav, search
+js/personas.js        the four roles, shared by every surface (lens, tasks, mobile tailoring)
+js/guide.js           hover guide engine + role-aware explanations
+js/mobile.js          the mobile app (screens, navigation, sheets, copilot host)
+js/landing.js         the chooser
+js/app.js             web router, lens switcher, sidebar nav, search, role guide
 vendor/echarts.min.js Apache ECharts 5.5 (vendored — fully offline)
 ```
 

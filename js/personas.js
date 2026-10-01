@@ -104,7 +104,17 @@ window.SCR = window.SCR || {};
     if (!id) { try { id = localStorage.getItem('scr-persona'); } catch (_) { id = null; } }
     return PERSONAS.some(p => p.id === id) ? id : DEFAULT;
   }
-  function remember(id) { try { localStorage.setItem('scr-persona', id); } catch (_) { /* private mode */ } }
+  /** Store the role; a ?as= link in the address bar follows it, so a reload keeps the role. */
+  function remember(id) {
+    try { localStorage.setItem('scr-persona', id); } catch (_) { /* private mode */ }
+    try {
+      const u = new URL(location.href);
+      if (u.searchParams.has('as') && u.searchParams.get('as') !== id) {
+        u.searchParams.set('as', id);
+        history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+      }
+    } catch (_) { /* file:// or no history */ }
+  }
 
   SCR.PERSONAS = PERSONAS;
   SCR.personas = { list: () => PERSONAS, byId, initials, stored, remember, DEFAULT };

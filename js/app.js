@@ -84,6 +84,8 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     SCR.personas.remember(p.id);
     renderPersonaPill();
     buildNav();
+    const ml = document.getElementById('mobileLink');
+    if (ml) ml.href = 'mobile.html?as=' + p.id;
     if (SCR.copilot && SCR.copilot.personaChanged) SCR.copilot.personaChanged(p);
     if (!opts || opts.navigate !== false) navigate(p.home);
     if (opts && opts.toast) {
@@ -367,7 +369,8 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
       <label class="gp-row">
         <span><b>Hover explanations</b><small>Point at any control to see what it does</small></span>
         <input type="checkbox" class="ios-switch" ${SCR.guide.enabled() ? 'checked' : ''} />
-      </label>`;
+      </label>
+      <div class="gp-foot"><a href="mobile.html?as=${p.id}">Open the mobile app</a><a href="index.html">Back to the chooser</a></div>`;
     pop.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
       pop.classList.remove('open');
       const k = b.dataset.go;
