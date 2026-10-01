@@ -13,7 +13,7 @@ window.SCR = window.SCR || {};
   const registry = []; // { el, chart, factory }
 
   /* Shared finish applied to every option: plain (unstacked) bars get
-     rounded caps, as in Swift Charts. Anything a chart sets explicitly wins. */
+     small, crisp caps. Anything a chart sets explicitly wins. */
   function polish(opt) {
     if (!opt || !opt.series) return opt;
     const yAxes = [].concat(opt.yAxis || []);
@@ -21,7 +21,7 @@ window.SCR = window.SCR || {};
     [].concat(opt.series).forEach(sr => {
       if (!sr || sr.type !== 'bar' || sr.stack) return;
       sr.itemStyle = sr.itemStyle || {};
-      if (sr.itemStyle.borderRadius == null) sr.itemStyle.borderRadius = horizontal ? [0, 6, 6, 0] : [6, 6, 0, 0];
+      if (sr.itemStyle.borderRadius == null) sr.itemStyle.borderRadius = horizontal ? [0, 3, 3, 0] : [3, 3, 0, 0];
     });
     return opt;
   }
@@ -212,18 +212,21 @@ window.SCR = window.SCR || {};
             const p0 = api.coord([d[0], d[3]]);
             const p1 = api.coord([d[1], d[2]]);
             const gap = 2;
+            const fill = t.series[ki % t.series.length];
             const children = [{
               type: 'rect',
-              shape: { x: p0[0] + gap / 2, y: p0[1] + gap / 2, width: p1[0] - p0[0] - gap, height: p1[1] - p0[1] - gap, r: 4 },
-              style: { fill: t.series[ki % t.series.length] }
+              shape: { x: p0[0] + gap / 2, y: p0[1] + gap / 2, width: p1[0] - p0[0] - gap, height: p1[1] - p0[1] - gap, r: 3 },
+              style: { fill }
             }];
-            if (d[2] === 0) {
-              const colW = p1[0] - p0[0];
+            const colW = p1[0] - p0[0];
+            const colText = colW < 96 ? d[4] : `${d[4]} · ${((d[8] / grand) * 100).toFixed(0)}%`;
+            // a column too narrow for its name leaves it to the tooltip
+            if (d[2] === 0 && colW >= colText.length * 6.8 + 4) {
               children.push({
                 type: 'text',
                 style: {
                   x: (p0[0] + p1[0]) / 2, y: api.coord([0, 0])[1] + 8,
-                  text: colW < 96 ? d[4] : `${d[4]} · ${((d[8] / grand) * 100).toFixed(0)}%`,
+                  text: colText,
                   fill: t.ink3, font: '500 11.5px ' + t.font, textAlign: 'center'
                 }
               });
@@ -235,7 +238,7 @@ window.SCR = window.SCR || {};
                 style: {
                   x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2,
                   text: ((d[6] / d[8]) * 100).toFixed(0) + '%',
-                  fill: '#fff', font: '600 11px ' + t.font,
+                  fill: SCR.theme.onColor(fill), font: '600 11px ' + t.font,
                   textAlign: 'center', textVerticalAlign: 'middle'
                 }
               });
@@ -259,7 +262,7 @@ window.SCR = window.SCR || {};
       const phaseColor = {
         done: t.status.good,
         active: t.series[1],
-        planned: t.isDark ? 'rgba(118, 118, 128, 0.42)' : 'rgba(118, 118, 128, 0.24)'
+        planned: t.isDark ? 'rgba(160, 158, 170, 0.38)' : 'rgba(136, 135, 140, 0.26)'
       };
       const cats = programs.map(p => p.name);
       const rows = [];

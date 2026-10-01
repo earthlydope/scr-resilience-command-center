@@ -13,7 +13,7 @@ window.SCR = window.SCR || {};
 
   const PERSONAS = [
     {
-      id: 'rrl', short: 'R&R', name: 'Risk & Resilience Leader', color: '#af52de', tag: 'Enterprise exposure',
+      id: 'rrl', short: 'R&R', name: 'Risk & Resilience Leader', color: '#fac400', tag: 'Enterprise exposure',
       role: 'Enterprise-wide view of vulnerabilities across value streams, nodes and geographies.',
       lens: 'Where is the largest exposure, and which mitigation deserves investment first?',
       home: 'executive',
@@ -32,7 +32,7 @@ window.SCR = window.SCR || {};
       web: { focus: 'Exposure, top nodes, the AVAR bridge and the whole mitigation portfolio.' }
     },
     {
-      id: 'vsl', short: 'VSL', name: 'Value Chain / Stream Leader', color: '#30b0c7', tag: 'Products & value streams',
+      id: 'vsl', short: 'VSL', name: 'Value Chain / Stream Leader', color: '#4fd1c5', tag: 'Products & value streams',
       role: 'Keeps products, brands and value streams running despite node failures.',
       lens: 'Which SKUs are fragile, and which node breaks them first?',
       home: 'valuestream',
@@ -51,7 +51,7 @@ window.SCR = window.SCR || {};
       web: { focus: 'Product resilience, the node overview drill and dependency traces.' }
     },
     {
-      id: 'cat', short: 'CAT', name: 'Category Leader', color: '#ff9500', tag: 'Suppliers & materials',
+      id: 'cat', short: 'CAT', name: 'Category Leader', color: '#ff8a5b', tag: 'Suppliers & materials',
       role: 'Owns supplier and material risk — sourcing, qualification and commercial mitigation.',
       lens: 'Which materials need alternates, buffers or new contract terms?',
       home: 'category',
@@ -70,7 +70,7 @@ window.SCR = window.SCR || {};
       web: { focus: 'Spend, risk and AVAR by supplier and material, with the alternate-sourcing worklist.' }
     },
     {
-      id: 'site', short: 'SITE', name: 'SC Site Leader', color: '#007aff', tag: 'Plant & DC continuity',
+      id: 'site', short: 'SITE', name: 'SC Site Leader', color: '#a395ff', tag: 'Plant & DC continuity',
       role: 'Protects plant & DC continuity: inbound materials, capacity and outbound supply.',
       lens: 'Can my site keep running, and what is the playbook if it cannot?',
       home: 'site',

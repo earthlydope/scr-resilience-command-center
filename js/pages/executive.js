@@ -118,6 +118,7 @@ window.SCR = window.SCR || {};
     /* ===== Today: greeting + headline numbers, with the agents' briefing beside it ===== */
     const today = U.el('<section class="today"></section>');
     today.appendChild(U.el(`<div class="hero">
+      <div class="chrome-field" aria-hidden="true"></div>
       <div>
         <div class="today-eyebrow"><span class="live-dot"></span>Executive Summary · ${U.esc(SCR.brief.asOfLong())}</div>
         <h1 class="today-title" data-hint="w-today">${SCR.brief.greeting()}. <span class="ai-text">${F.usdM(D.kpis.totalAVAR)}</span> of adjusted value is at risk across ${D.products.length} products.</h1>
@@ -135,6 +136,23 @@ window.SCR = window.SCR || {};
     </div>`));
     today.appendChild(SCR.brief.card('rrl'));
     host.appendChild(today);
+
+    /* ===== Live signals: the open alert stack, worst first, as a marquee ===== */
+    if (SCR.motion) {
+      const sevC = { critical: 'var(--status-critical)', high: 'var(--status-serious)', medium: 'var(--status-warning)' };
+      const rank = { critical: 0, high: 1, medium: 2, low: 3 };
+      const open = D.alerts.filter(a => a.status !== 'closed')
+        .sort((a, b) => (rank[a.sev] - rank[b.sev]) || (b.exposure - a.exposure)).slice(0, 9);
+      const band = SCR.motion.ticker(open.map(a => ({
+        html: `${U.esc(a.title.split(' — ')[0])}${a.exposure ? ` <b>${F.usdM(a.exposure)}</b>` : ''}`,
+        sev: sevC[a.sev] || 'var(--ink-4)',
+        onClick: () => U.openAlert(a.id)
+      })), { label: 'Live signals', cls: 'signal-band' });
+      band.setAttribute('data-hint', 'w-ticker');
+      band.setAttribute('data-hint-title', 'Live signals');
+      band.setAttribute('data-hint-body', 'Every open alert, worst first, scrolling past with its exposure. Hover to pause; click one to open it.');
+      host.appendChild(band);
+    }
 
     /* ===== Filter flyout ===== */
     const streams = state.sector === 'all'
@@ -535,7 +553,7 @@ window.SCR = window.SCR || {};
       feedWrap.appendChild(U.el(`<div class="feed-item">
         <span style="width:9px;height:9px;border-radius:50%;background:var(--series-${a.color});flex-shrink:0;margin-top:6px"></span>
         <div class="feed-body">
-          <span class="f-agent" style="color:var(--series-${a.color})">${U.esc(a.name)}</span>
+          <span class="f-agent" style="--tone:var(--series-${a.color})">${U.esc(a.name)}</span>
           <div class="f-text">${f.text}</div>
         </div>
         <span class="feed-time">${U.esc(f.time)} UTC</span>

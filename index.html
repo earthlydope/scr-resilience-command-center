@@ -5,47 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SCR — Supply Chain Resilience Command Center</title>
 <meta name="description" content="Supply Chain Resilience Command Center — choose your role, then the mobile app or the web application." />
-<meta name="theme-color" content="#f5f5f7" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2340a9ff'/%3E%3Cstop offset='1' stop-color='%233b3fe0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M24 2C41.5 2 46 6.5 46 24S41.5 46 24 46 2 41.5 2 24 6.5 2 24 2Z' fill='url(%23g)'/%3E%3Cpath d='M24 10.2 34.8 13.9v7.6c0 6.9-4.6 11.8-10.8 14.6-6.2-2.8-10.8-7.7-10.8-14.6v-7.6Z' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<meta name="theme-color" content="#f4f4f2" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='1' y='1' width='46' height='46' rx='11' fill='%23fac400'/%3E%3Cpath d='M24 9.6 35.4 13.5v8c0 7.2-4.8 12.4-11.4 15.4-6.6-3-11.4-8.2-11.4-15.4v-8Z' fill='none' stroke='%23111013' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='24' cy='17.3' r='2.6' fill='%23111013'/%3E%3Ccircle cx='18.4' cy='28.3' r='2.4' fill='%23111013'/%3E%3Ccircle cx='29.6' cy='28.3' r='2.4' fill='%23111013'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" />
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/guide.css" />
 <link rel="stylesheet" href="css/landing.css" />
 </head>
 <body data-theme="light" data-shell="landing">
-<div class="lz">
-  <header class="lz-top">
+
+<div class="lz-progress" aria-hidden="true"><i id="lzProgress"></i></div>
+<button type="button" class="lz-rail" id="lzTop" aria-label="Back to top"><span>Back to top</span><i></i></button>
+
+<header class="lz-top" id="lzTopBar">
+  <div class="lz-top-in">
     <a class="lz-brand" href="index.html">
-      <span class="lz-mark"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="lzTile" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#40a9ff"/>
-              <stop offset=".55" stop-color="#0a7cff"/>
-              <stop offset="1" stop-color="#3b3fe0"/>
-            </linearGradient>
-            <linearGradient id="lzSheen" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#ffffff" stop-opacity=".5"/>
-              <stop offset=".48" stop-color="#ffffff" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="lzGlyph" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#ffffff"/>
-              <stop offset="1" stop-color="#d6e8ff"/>
-            </linearGradient>
-          </defs>
-          <!-- app-icon squircle -->
-          <path d="M24 2C41.5 2 46 6.5 46 24S41.5 46 24 46 2 41.5 2 24 6.5 2 24 2Z" fill="url(#lzTile)"/>
-          <path d="M24 2C41.5 2 46 6.5 46 24S41.5 46 24 46 2 41.5 2 24 6.5 2 24 2Z" fill="url(#lzSheen)"/>
-          <path d="M24 2.6C40.9 2.6 45.4 7.1 45.4 24S40.9 45.4 24 45.4 2.6 40.9 2.6 24 7.1 2.6 24 2.6Z" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width="1"/>
-          <!-- resilience shield with a supply-chain hub inside -->
-          <path d="M24 10.2 34.8 13.9v7.6c0 6.9-4.6 11.8-10.8 14.6-6.2-2.8-10.8-7.7-10.8-14.6v-7.6Z" fill="none" stroke="url(#lzGlyph)" stroke-width="2.4" stroke-linejoin="round"/>
-          <path d="M24 19.6v3.6M22.6 24.6l-2.9 2.2M25.4 24.6l2.9 2.2" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round"/>
-          <circle cx="24" cy="17.6" r="2.3" fill="#ffffff"/>
-          <circle cx="24" cy="23.9" r="1.7" fill="#ffffff"/>
-          <circle cx="18.6" cy="28.1" r="2.1" fill="#ffffff"/>
-          <circle cx="29.4" cy="28.1" r="2.1" fill="#ffffff"/>
+      <span class="lz-mark"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="1" width="46" height="46" rx="11" fill="#fac400"/>
+          <path d="M24 9.6 35.4 13.5v8c0 7.2-4.8 12.4-11.4 15.4-6.6-3-11.4-8.2-11.4-15.4v-8Z" fill="none" stroke="#111013" stroke-width="2.8" stroke-linejoin="round"/>
+          <path d="M24 19.4v3.8M22.5 24.6l-3 2.3M25.5 24.6l3 2.3" stroke="#111013" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="17.3" r="2.4" fill="#111013"/>
+          <circle cx="24" cy="23.9" r="1.8" fill="#111013"/>
+          <circle cx="18.4" cy="28.3" r="2.2" fill="#111013"/>
+          <circle cx="29.6" cy="28.3" r="2.2" fill="#111013"/>
         </svg></span>
       <span><b>Supply Chain Resilience</b><small>Command Center</small></span>
     </a>
-    <span class="lz-by">Veridia Group demo · <b>Syren Cloud</b></span>
+    <nav class="lz-nav" aria-label="Sections">
+      <a href="#roles">Roles</a>
+      <a href="#devices">Devices</a>
+      <a href="#how">How it works</a>
+      <a href="#who">Who does what</a>
+    </nav>
     <div class="lz-tools">
       <button type="button" class="lz-btn" data-guide-toggle data-hint="lz-guide">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.86.83c0 1.66-2.46 2.2-2.46 3.6"/><path d="M12 16.9v.2"/></svg>
@@ -55,25 +48,53 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
       </button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <section class="lz-hero">
-    <span class="lz-eyebrow">One resilience command center</span>
-    <h1>See what breaks first — <span class="ai-text">and act before it does.</span></h1>
-    <p>Value at risk across every product, material, supplier, plant, DC and market, with agents that sense, simulate and draft the fix. Pick your role, then how you want to see it.</p>
-    <div class="lz-scale" id="lzStats" data-hint="lz-stats"></div>
+<main>
+  <!-- ======= Hero ======= -->
+  <section class="lz-hero lz-wrap">
+    <div class="lz-hero-copy">
+      <span class="kicker" data-rv>Veridia Group demo · built by <b>Syren Cloud</b></span>
+      <h1 data-rv>See what <span class="hl hl-fill" data-sweep>breaks first</span>, and act before it does.</h1>
+      <p data-rv>Value at risk across every product, material, supplier, plant, DC and market, with agents that sense, simulate and draft the fix. Pick your role, then how you want to see it.</p>
+      <div class="lz-ctas" data-rv>
+        <a class="neo-btn" id="lzGoWeb" href="web.html" data-hint="lz-go-web" data-hint-title="Open the web application" data-hint-body="Straight into the full command center, as the role selected below.">Open the web app <span class="go-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></a>
+        <a class="neo-btn ghost" id="lzGoMobile" href="mobile.html" data-hint="lz-go-mobile" data-hint-title="Open the mobile app" data-hint-body="The phone experience for the role selected below, with the hover guide beside the device.">Open the mobile app <span class="go-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></a>
+      </div>
+      <div class="lz-scale" id="lzStats" data-hint="lz-stats" data-rv></div>
+    </div>
+    <div class="lz-visual" id="lzVisual" aria-hidden="true">
+      <div class="lz-orb" id="lzOrb"><i class="o-glow"></i><i class="o-back"></i><i class="o-main"></i><i class="o-shine"></i></div>
+      <div class="lz-float f1" id="lzF1" data-rv></div>
+      <div class="lz-float f2" id="lzF2" data-rv></div>
+      <div class="lz-float f3" id="lzF3" data-rv></div>
+    </div>
   </section>
 
-  <section class="lz-step">
-    <div class="lz-step-head"><span class="lz-num">1</span><h2>Choose your role</h2></div>
+  <!-- ======= Live signals ======= -->
+  <div class="lz-band" id="lzTicker" data-hint="lz-ticker" data-hint-title="Live signals" data-hint-body="The open alert stack, worst first, as the agents see it right now. Hover to pause."></div>
+
+  <!-- ======= 1 · Role ======= -->
+  <section class="lz-step lz-wrap" id="roles">
+    <div class="lz-step-head" data-rv>
+      <span class="lz-num">01</span>
+      <div><span class="kicker">Step one</span><h2>Choose your <span class="hl" data-sweep>role</span></h2></div>
+      <p class="lz-step-note">Each role lands on its own cockpit, briefing and copilot — on the phone and on the web.</p>
+    </div>
     <div class="lz-roles" id="lzRoles" role="radiogroup" aria-label="Role" data-hint="lz-role"></div>
     <p class="lz-lens" id="lzLens"></p>
   </section>
 
-  <section class="lz-step">
-    <div class="lz-step-head"><span class="lz-num">2</span><h2>Choose your device</h2></div>
+  <!-- ======= 2 · Device ======= -->
+  <section class="lz-step lz-wrap" id="devices">
+    <div class="lz-step-head" data-rv>
+      <span class="lz-num">02</span>
+      <div><span class="kicker">Step two</span><h2>Choose your <span class="hl" data-sweep>device</span></h2></div>
+      <p class="lz-step-note">Same data, same agents, same role — rendered for the device in hand.</p>
+    </div>
     <div class="lz-picker">
-      <a class="lz-card" id="lzMobile" href="mobile.html" data-hint="lz-mobile">
+      <a class="lz-card" id="lzMobile" href="mobile.html" data-hint="lz-mobile" data-tilt="3" data-rv>
         <div class="lz-card-head">
           <span class="lz-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 5.5h3"/></svg>Mobile app</span>
           <span class="lz-pill">On the move</span>
@@ -82,9 +103,9 @@
         <p id="lzMobileText"></p>
         <div class="lz-stage lz-stage-m"><div class="mini-phone" id="lzPhone"></div></div>
         <div class="lz-feat" id="lzMobileFeat"></div>
-        <span class="lz-go">Enter the mobile app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        <span class="lz-go neo-btn sm">Enter the mobile app <span class="go-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></span>
       </a>
-      <a class="lz-card" id="lzWeb" href="web.html" data-hint="lz-web">
+      <a class="lz-card" id="lzWeb" href="web.html" data-hint="lz-web" data-tilt="3" data-rv>
         <div class="lz-card-head">
           <span class="lz-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2.2"/><path d="M8 21h8M12 17v4"/></svg>Web application</span>
           <span class="lz-pill">Command center</span>
@@ -93,25 +114,55 @@
         <p id="lzWebText"></p>
         <div class="lz-stage lz-stage-w"><div class="mini-web" id="lzBrowser"></div></div>
         <div class="lz-feat" id="lzWebFeat"></div>
-        <span class="lz-go">Enter the web application <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        <span class="lz-go neo-btn sm">Enter the web application <span class="go-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></span>
       </a>
     </div>
   </section>
 
-  <section class="lz-step">
-    <div class="lz-step-head"><h2>What each role does here</h2><small>The day-to-day job of each role, and where it happens</small></div>
-    <div class="lz-role-map" id="lzRoleMap" data-hint="lz-roles"></div>
+  <!-- ======= How it works (dark chrome) ======= -->
+  <section class="lz-dark" id="how">
+    <div class="chrome-field" aria-hidden="true"></div>
+    <div class="lz-dark-in lz-wrap">
+      <div class="lz-dark-copy" data-rv>
+        <span class="kicker">How the command center works</span>
+        <h2>Sense<span class="dot-y">.</span> Score<span class="dot-y">.</span> Simulate<span class="dot-y">.</span> Act<span class="dot-y">.</span></h2>
+        <p>One loop runs underneath every screen. Agents watch the network, price the exposure, rehearse the fix and draft the action. People approve the moves that matter.</p>
+        <div class="lz-dark-stats" id="lzLoopStats"></div>
+      </div>
+      <div class="lz-glass" data-rv data-hint="lz-loop" data-hint-title="The agentic loop" data-hint-body="The same six agents feed the web cockpits, the phone briefing and the copilot — each step below is something they do continuously.">
+        <ol class="lz-loop" id="lzLoop"></ol>
+      </div>
+    </div>
   </section>
 
-  <footer class="lz-foot">
-    <div class="lz-pillars">
-      <span>Sense</span><span>Quantify</span><span>Simulate</span><span>Mitigate</span><span>Govern</span>
+  <!-- ======= 3 · Who does what ======= -->
+  <section class="lz-step lz-wrap" id="who">
+    <div class="lz-step-head" data-rv>
+      <span class="lz-num">03</span>
+      <div><span class="kicker">Who does what</span><h2>What each role does <span class="hl" data-sweep>here</span></h2></div>
+      <p class="lz-step-note">The day-to-day job of each role, and the screen where it happens.</p>
     </div>
-    <p>Same data, same agents, same role — rendered for the device in hand. All figures are illustrative demo data for a fictional company.</p>
-  </footer>
-</div>
+    <div class="lz-role-map" id="lzRoleMap" data-hint="lz-roles"></div>
+  </section>
+</main>
+
+<!-- ======= Closing band ======= -->
+<footer class="lz-end">
+  <div class="chrome-field" aria-hidden="true"></div>
+  <div class="lz-end-in lz-wrap" data-rv>
+    <span class="kicker">Ready when you are</span>
+    <h2>See what breaks first<span class="dot-y">.</span> Then fix it<span class="dot-y">.</span></h2>
+    <div class="lz-end-btns">
+      <a class="neo-btn yellow" id="lzEndWeb" href="web.html">Open the web app <span class="go-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></a>
+      <a class="neo-btn on-dark" id="lzEndMobile" href="mobile.html">Open the mobile app <span class="go-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></a>
+    </div>
+  </div>
+  <div class="lz-words" id="lzWords" aria-hidden="true"></div>
+  <p class="lz-fine lz-wrap">Same data, same agents, same role — rendered for the device in hand. All figures are illustrative demo data for a fictional company.</p>
+</footer>
 
 <script src="js/theme.js"></script>
+<script src="js/motion.js"></script>
 <script src="js/personas.js"></script>
 <script src="js/data.js"></script>
 <script src="js/components.js"></script>

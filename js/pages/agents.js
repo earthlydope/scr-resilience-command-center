@@ -229,7 +229,7 @@ window.SCR = window.SCR || {};
       const item = U.el(`<div class="feed-item ${f.fresh ? 'fresh' : ''}" style="cursor:pointer">
         <span style="width:9px;height:9px;border-radius:50%;background:var(--series-${a.color});flex-shrink:0;margin-top:6px"></span>
         <div class="feed-body">
-          <span class="f-agent" style="color:var(--series-${a.color})">${U.esc(a.name)}</span>
+          <span class="f-agent" style="--tone:var(--series-${a.color})">${U.esc(a.name)}</span>
           <div class="f-text">${f.text}</div>
         </div>
         <span class="feed-time">${U.esc(f.time)} UTC</span>

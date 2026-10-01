@@ -44,9 +44,11 @@ same data, agents and copilot, and the role carries across (`?as=rrl|vsl|cat|sit
 open either one as a given role). A role map on the chooser explains what each role does
 and where.
 
-**The mobile app** is an iPhone build on a presentation stage — large titles that
-collapse into a glass nav bar, push navigation, bottom sheets, a floating Liquid Glass tab
-bar, confirmations in the Dynamic Island and the Siri edge glow while the copilot thinks.
+**The mobile app** is a phone build on a presentation stage — highlighted large titles that
+collapse into a blurred nav bar, push navigation, bottom sheets, an ink tab dock with a
+yellow active tab, a live-signal strip under the headline, confirmations in the Dynamic
+Island and a yellow radar rim while the copilot thinks. Over the phone the pointer becomes a
+fingertip.
 It is tailored per role: five tabs — **Today**, the role's own list, **Alerts**,
 **Simulate**, **Ask** — where the second tab is *Decisions* (Risk & Resilience Leader),
 *Products* (Value Chain Leader), *Suppliers* (Category Leader) or *Sites* (Site Leader).
@@ -145,11 +147,12 @@ queue, alerts and the copilot's attributed answers.
 index.html            the chooser: role → mobile app or web application
 web.html              web application shell (sidebar, toolbar, drawers, copilot, modal)
 mobile.html           mobile app shell (stage, iPhone frame, tab bar, sheets)
-css/styles.css        design system (light/dark via CSS custom properties)
-css/mobile.css        the iPhone app: device, iOS navigation, lists, sheets, tab bar
+css/styles.css        design system "Signal" (light/dark via CSS custom properties)
+css/mobile.css        the phone app: stage, device, navigation, lists, sheets, tab dock
 css/landing.css       the chooser
 css/guide.css         the hover guide (shared)
 js/theme.js           design tokens → ECharts bridge, formatters, TTR/TTS/RI helpers
+js/motion.js          motion layer: arrivals, count-ups, highlighter, marquee, pointer, tilt
 js/data.js            synthetic dataset + the resilience engine (single source of truth)
 js/charts.js          chart lifecycle + waterfall/mekko/gantt/sparkline/combo builders
 js/components.js      shared UI + the 360° detail drawers
@@ -161,13 +164,14 @@ js/guide.js           hover guide engine + role-aware explanations
 js/mobile.js          the mobile app (screens, navigation, sheets, copilot host)
 js/landing.js         the chooser
 js/app.js             web router, lens switcher, sidebar nav, search, role guide
-vendor/echarts.min.js Apache ECharts 5.5 (vendored — fully offline)
+vendor/echarts.min.js Apache ECharts 5.5 (vendored; Montserrat loads from Google Fonts and
+                      falls back to system fonts offline)
 ```
 
 ## Navigation
 
-A floating glass sidebar (persona-filtered, collapsible from the toolbar) beside a toolbar that
-floats over the page — content scrolls beneath it with a soft blur edge:
+An ink sidebar (persona-filtered, collapsible from the toolbar) beside a translucent toolbar
+that content scrolls beneath; a yellow route line runs under it on every navigation:
 **My cockpit** (Executive Summary · Value Streams · Category & Suppliers · Site
 Resilience) · **Intelligence** (Network Explorer · Scenario Studio) · **Act** (Alerts &
 Actions · Recommendations) · **Govern** (Data Quality). An always-visible filter bar scopes
@@ -199,22 +203,30 @@ daily-digest generator composes a live brief.
 
 ## Design language
 
-Apple-inspired, in the spirit of macOS Tahoe and iOS 26:
+"Signal" — editorial ink on paper with one loud colour, inspired by StatusNeo's site:
 
-- **Type** — SF Pro (`-apple-system`) with Inter as the cross-platform stand-in; large bold
-  titles with tight tracking; key figures in SF Pro Rounded with tabular numerals.
-- **Materials** — *Liquid Glass* only on chrome that floats over content (sidebar, toolbar
-  controls, drawer, copilot, popovers, notifications), over an ambient light field. Cards stay
-  opaque so charts stay legible.
-- **Intelligence** — the iridescent blue → violet → pink → orange gradient marks anything the
-  agents wrote or computed (the briefing, AI insights, the copilot's orb and its Siri-style
-  edge glow while thinking), and nothing else.
-- **Colour** — Apple blue (`#0071e3`) is the single interaction accent. Charts use Apple system
-  hues in a fixed order (teal → purple → orange → blue → pink → green → indigo → brown); status
-  colours (green / orange / red) are reserved for severity, with text-safe variants for small type.
-- **Shape & motion** — continuous (squircle) corners where the browser supports them, grouped
-  table headers, segmented controls with a floating thumb, capsule buttons, rounded chart bars,
-  and spring-eased sheets and drawers; motion is removed under *Reduce Motion*.
-- **Layout** — Apple Health–style KPI tiles (coloured glyph and title, big rounded figure, chevron
-  when it drills); the one place a % line meets $ columns, the line gets its own aligned panel
-  and axis — never a second y-axis on the same plot. Light and dark themes are both first-class.
+- **Type** — Montserrat throughout: semibold display with tight tracking, medium-weight body,
+  tabular figures.
+- **Colour** — ink (`#111013`) leads and signal yellow (`#fac400`) answers. Yellow marks what
+  matters: a highlighter under the key phrase of a heading, the active nav item and tab, focus,
+  hover wipes and the agentic layer. Severity uses a warm ramp kept apart from the brand yellow
+  (green → amber → orange → red) with text-safe variants for small type. Charts use a fixed
+  order — ink → yellow → coral → slate → teal → violet → blue → sand — and labels on filled
+  marks pick ink or white for contrast.
+- **Surfaces** — a paper canvas with white cards on hairlines, an ink sidebar, and dark
+  "liquid chrome" panels (curved light ridges drifting over ink) for the moments that set the
+  scene: the Executive hero, the phone's headline card, the chooser's "how it works" and
+  closing bands.
+- **Intelligence** — the agents wear the signal: an ink tile with a yellow spark, a yellow arc
+  that sweeps round the briefing like radar, and a yellow rim with a warm edge glow while the
+  copilot thinks.
+- **Motion** (`js/motion.js`) — blocks rise in as they reach the viewport, headline figures
+  count up, highlighters sweep under headings and section titles end in a yellow full stop.
+  Primary buttons fill with a yellow wipe while their ↗ slips out and back; live signals run
+  in marquees that pause on hover; chooser cards lean toward the pointer; a dot-and-ring
+  pointer companion opens on anything clickable and becomes a fingertip over the phone; a
+  yellow line marks each navigation. All of it stands down under *Reduce Motion*.
+- **Layout** — KPI tiles with a tinted glyph and a big figure (a highlighter sweeps under the
+  figure when a tile drills); the one place a % line meets $ columns, the line gets its own
+  aligned panel and axis — never a second y-axis on the same plot. Light and dark themes are
+  both first-class.

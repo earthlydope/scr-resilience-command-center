@@ -81,14 +81,14 @@ window.SCR = window.SCR || {};
     gap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 8h9"/><path d="M5 16h14"/><path d="m17 5 3 3-3 3"/><path d="m8 13-3 3 3 3"/></svg>',
     spend: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>'
   };
-  // Apple system hues, in the original slot order (pink, cyan, green, orange, purple, teal, red-orange, indigo)
-  const CHIP_COLORS = ['#ff2d55', '#32ade6', '#34c759', '#ff9500', '#af52de', '#30b0c7', '#ff6b22', '#5856d6'];
+  // Signal palette, in the original slot order (coral, blue, green, yellow, violet, teal, red, ink)
+  const CHIP_COLORS = ['#ff6b3d', '#3478f6', '#1f9d5c', '#fac400', '#7c5ce0', '#23a094', '#e0302b', 'var(--ink)'];
 
   /** items: [{icon, color(idx into CHIP_COLORS or hex), label, value, sub, subClass, progress:{pct,color}, onClick}]
       opts: {bulb: {onClick}} */
   const CHEV = '<svg class="k-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>';
   const SPARK = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 4c.55 4.3 2.2 6.9 6.5 8.5-4.3 1.6-5.95 4.2-6.5 8.5-.55-4.3-2.2-6.9-6.5-8.5C8.8 10.9 10.45 8.3 11 4Z"/><path d="M18.5 2.5c.22 1.5.8 2.4 2.3 2.9-1.5.5-2.08 1.4-2.3 2.9-.22-1.5-.8-2.4-2.3-2.9 1.5-.5 2.08-1.4 2.3-2.9Z"/></svg>';
-  /* Apple Health summary tile: coloured glyph + title, a chevron when it
+  /* Summary tile: tinted glyph + title, a chevron when it
      drills, a big rounded figure, one quiet line underneath. */
   /** Guide copy for a tile: the copilot's definition of the KPI when it has one. */
   function kpiHint(it) {
@@ -147,9 +147,9 @@ window.SCR = window.SCR || {};
 
   /* ---------------- Risk-factor heat pill (Node Risk Summary) ---------------- */
   function heatPill(v) {
-    // v in 0–1; green (low) → red (high), like the original risk summary
-    const c = v >= 0.6 ? '#e5342b' : v >= 0.45 ? '#f26a1b' : v >= 0.3 ? '#d48806' : '#248a3d';
-    return `<span style="display:block;text-align:center;background:${c};color:#fff;font-weight:700;font-size:12.5px;border-radius:99px;padding:3px 0;min-width:52px;font-variant-numeric:tabular-nums">${v.toFixed(2)}</span>`;
+    // v in 0–1; low and medium recede, high and critical fill solid
+    const k = v >= 0.6 ? 'crit' : v >= 0.45 ? 'high' : v >= 0.3 ? 'med' : 'low';
+    return `<span class="heat-pill h-${k}">${v.toFixed(2)}</span>`;
   }
 
   /* ---------------- Filter bar (clean, always-visible inline filters) ---------------- */
@@ -444,6 +444,8 @@ window.SCR = window.SCR || {};
     body.innerHTML = '';
     body.scrollTop = 0;
     build(body);
+    // sections settle in one after another as the drawer slides
+    if (SCR.motion) SCR.motion.reveal(body.querySelectorAll(':scope > *'), { stagger: 0.05 });
     document.getElementById('drawer').classList.add('open');
     document.getElementById('drawerScrim').classList.add('open');
     document.body.classList.add('drawer-open');

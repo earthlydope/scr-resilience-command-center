@@ -5,8 +5,8 @@
    every chart re-themes on light/dark toggle. All chart code
    must pull colors from here — never hardcode.
 
-   Categorical palette (Apple system hues, fixed order, never cycled):
-   teal → purple → orange → blue → pink → green → indigo → brown
+   Categorical palette ("Signal", fixed order, never cycled):
+   ink → yellow → coral → slate → teal → violet → blue → sand
    ============================================================ */
 window.SCR = window.SCR || {};
 
@@ -16,9 +16,9 @@ SCR.pages = SCR.pages || {};
 SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = page; };
 
 (function () {
-  /* SF Pro first: -apple-system resolves to SF Pro Text/Display with optical
-     sizing on Apple platforms; Inter is the cross-platform stand-in. */
-  const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Inter, system-ui, sans-serif';
+  /* Montserrat (loaded from Google Fonts) carries the whole system; the
+     fallbacks keep a geometric feel until it arrives or when offline. */
+  const FONT = 'Montserrat, "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif';
 
   function cssVar(name) {
     return getComputedStyle(document.body || document.documentElement)
@@ -48,14 +48,14 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
         serious: cssVar('--status-serious'),
         critical: cssVar('--status-critical')
       },
-      // sequential single-hue blue ramp (light→dark reads low→high)
+      // sequential signal ramp (pale → deep amber reads low → high)
       seq: isDark
-        ? ['#0b2a4d', '#0e3a6b', '#11508f', '#1466b8', '#1f7fe0', '#4a9bf5', '#7ab6fb', '#a9d0ff']
-        : ['#e6f1ff', '#cce3ff', '#a3ccff', '#74b0ff', '#4593f5', '#1a78e6', '#0a62c7', '#0a4c9a'],
-      // ordinal ramp for funnels / tiers (mid steps for contrast on both surfaces)
+        ? ['#2b2614', '#3f3513', '#5c4b0f', '#82680a', '#b08b05', '#e0b000', '#fac400', '#ffdd66']
+        : ['#fff7d6', '#ffeda8', '#ffe074', '#ffd23d', '#fac400', '#e0a800', '#b58600', '#7f5e00'],
+      // ordinal ramp for funnels / tiers (wide → narrow deepens toward ink)
       ordinal: isDark
-        ? ['#1466b8', '#1f7fe0', '#4a9bf5', '#7ab6fb', '#a9d0ff']
-        : ['#a3ccff', '#74b0ff', '#4593f5', '#1a78e6', '#0a62c7'],
+        ? ['#6b5200', '#a37d00', '#d9a400', '#fac400', '#ffe58f']
+        : ['#ffe58f', '#fac400', '#d9a400', '#9e7700', '#5e4700'],
       font: FONT
     };
   }
@@ -66,25 +66,25 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
     return {
       color: t.series,
       textStyle: { fontFamily: FONT, color: t.ink2 },
-      // settle like UIKit: quick start, long soft landing
-      animationDuration: 850,
-      animationEasing: 'quarticOut',
-      animationDurationUpdate: 520,
-      animationEasingUpdate: 'quarticOut',
+      // marks grow in one after another, then settle
+      animationDuration: 1000,
+      animationEasing: 'cubicInOut',
+      animationDelay: idx => Math.min(idx * 22, 440),
+      animationDurationUpdate: 600,
+      animationEasingUpdate: 'cubicInOut',
       tooltip: {
-        // a glass popover rather than a boxed label
-        backgroundColor: t.isDark ? 'rgba(44, 44, 46, 0.78)' : 'rgba(255, 255, 255, 0.80)',
+        // an ink card with a yellow edge — the house tooltip
+        backgroundColor: t.isDark ? 'rgba(29, 28, 33, 0.97)' : 'rgba(17, 16, 19, 0.95)',
         borderColor: 'transparent',
         borderWidth: 0,
         padding: [10, 14],
-        textStyle: { color: t.ink, fontSize: 13.5, fontFamily: FONT },
-        extraCssText: 'backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);' +
-          'border-radius:14px;box-shadow:0 0 0 .5px ' + (t.isDark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.08)') +
-          ',0 10px 32px rgba(0,0,0,' + (t.isDark ? '.5' : '.14') + ');line-height:1.5;'
+        textStyle: { color: '#f4f3f0', fontSize: 13, fontFamily: FONT, fontWeight: 500 },
+        extraCssText: 'border-radius:10px;border-left:3px solid #fac400;' +
+          'box-shadow:0 18px 40px -14px rgba(0,0,0,' + (t.isDark ? '.8' : '.45') + ');line-height:1.55;'
       },
       legend: {
-        textStyle: { color: t.ink2, fontSize: 13, fontFamily: FONT },
-        itemWidth: 9, itemHeight: 9, icon: 'circle', itemGap: 16
+        textStyle: { color: t.ink2, fontSize: 12.5, fontFamily: FONT, fontWeight: 500 },
+        itemWidth: 10, itemHeight: 10, icon: 'roundRect', itemGap: 18
       },
       grid: { left: 8, right: 14, top: 34, bottom: 4, containLabel: true }
     };
@@ -108,7 +108,7 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
       data,
       axisLine: { lineStyle: { color: t.axis } },
       axisTick: { show: false },
-      axisLabel: { color: t.ink3, fontSize: 12.5, fontFamily: FONT }
+      axisLabel: { color: t.ink3, fontSize: 12, fontFamily: FONT, fontWeight: 500 }
     }, extra);
   }
 
@@ -119,8 +119,8 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
       type: 'value',
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: t.ink3, fontSize: 12.5, fontFamily: FONT },
-      splitLine: { lineStyle: { color: t.grid, width: 1 } }
+      axisLabel: { color: t.ink3, fontSize: 12, fontFamily: FONT, fontWeight: 500 },
+      splitLine: { lineStyle: { color: t.grid, width: 1, type: [3, 4] } }
     }, extra);
   }
 
@@ -183,7 +183,31 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
     }[riBand(ri)];
   }
 
-  SCR.theme = { tokens, baseOption, catAxis, valAxis };
+  /** Readable text colour on a solid fill: ink on light fills, white on dark. */
+  function onColor(c) {
+    const t = tokens();
+    let hex = String(c || '').trim();
+    if (hex.startsWith('var(')) hex = cssVar(hex.slice(4, -1).trim());
+    const m = hex.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (!m) return t.isDark ? '#111013' : '#ffffff';
+    let h = m[1];
+    if (h.length === 3) h = h.split('').map(x => x + x).join('');
+    const ch = i => { const v = parseInt(h.slice(i, i + 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * ch(0) + 0.7152 * ch(2) + 0.0722 * ch(4);
+    return L > 0.19 ? "#111013" : "#ffffff";
+  }
+
+  /* Canvas text only uses Montserrat once it has loaded: re-draw once it lands. */
+  if (document.fonts && document.fonts.load) {
+    const ready = () => { try { return document.fonts.check('600 12px Montserrat'); } catch (_) { return true; } };
+    if (!ready()) {
+      document.fonts.load('600 12px Montserrat').then(() => {
+        if (ready() && SCR.charts && SCR.charts.rerenderAll) SCR.charts.rerenderAll();
+      }).catch(() => {});
+    }
+  }
+
+  SCR.theme = { tokens, baseOption, catAxis, valAxis, onColor };
   SCR.fmt = fmt;
   SCR.risk = { ratingOf, ratingClass, ratingColor, scoreColor, riBand, riClass, riColor };
 })();

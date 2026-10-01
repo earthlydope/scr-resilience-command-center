@@ -5,10 +5,11 @@
    · Five tabs: Today · <role tab> · Alerts · Simulate · Ask. The
      second tab is the role's own list: Decisions, Products,
      Suppliers or Sites.
-   · iOS patterns: large titles that collapse into a glass nav
-     bar, push navigation with a back label, bottom sheets, a
-     floating Liquid Glass tab bar, confirmations in the Dynamic
-     Island, and the Siri edge glow while the copilot thinks.
+   · Phone patterns: highlighted large titles that collapse into
+     a blurred nav bar, push navigation with a back label, bottom
+     sheets, an ink tab dock with a yellow active tab, a live-
+     signal strip, confirmations in the Dynamic Island, and a
+     yellow radar rim while the copilot thinks.
    · Shares SCR.copilot (intent router and answers), SCR.work
      (real actions and approvals) and SCR.brief (the briefing)
      with the web app. The web-only entry points — drawers,
@@ -160,6 +161,8 @@ window.SCR = window.SCR || {};
     if (back) v.querySelector('.nav-back').addEventListener('click', pop);
     scr.build(v.querySelector('.view-body'), v);
     views.appendChild(v);
+    // titles get the highlighter; fresh screens rise in, refreshed ones stay put
+    if (SCR.motion) SCR.motion.decorate(v, { mode: 'mobile', animate: how !== 'none' });
     const sc = v.querySelector('.view-scroll');
     sc.addEventListener('scroll', () => v.classList.toggle('scrolled', sc.scrollTop > 40), { passive: true });
     if (scr.scrollY) { sc.scrollTop = scr.scrollY; v.classList.toggle('scrolled', sc.scrollTop > 40); }
@@ -246,7 +249,7 @@ window.SCR = window.SCR || {};
     if (p.id === 'rrl') {
       return {
         label: 'Adjusted value at risk', value: usd(k.totalAVAR), sub: `of ${usd(k.totalVAR)} value at risk across ${k.products} products`,
-        spark: sparkSvg(d.monthly.avar, '#af52de'),
+        spark: sparkSvg(d.monthly.avar, p.color),
         stats: [{ l: 'Resilience', v: k.enterpriseRI + '%', s: f.signed(k.riDelta, ' pts') }, { l: 'Retired YTD', v: usd(k.mitigatedYtd), s: 'AVAR mitigated' }]
       };
     }
@@ -255,7 +258,7 @@ window.SCR = window.SCR || {};
       const fragile = d.products.slice().sort((a, b) => a.ri - b.ri)[0];
       return {
         label: 'SKUs exposed', value: `${exposed.length} <small>of ${d.products.length}</small>`, sub: 'have a component that recovers slower than it survives',
-        spark: sparkSvg(d.monthly.ri, '#30b0c7'),
+        spark: sparkSvg(d.monthly.ri, p.color),
         stats: [{ l: 'Most fragile', v: f.ri(fragile.ri), s: fragile.brand }, { l: 'Sales exposed', v: usd(exposed.reduce((a, x) => a + x.nts, 0)), s: 'NTS behind gaps' }]
       };
     }
@@ -265,7 +268,7 @@ window.SCR = window.SCR || {};
       const cover = Math.round((1 - d.materials.filter(m => m.singleSource).length / d.materials.length) * 100);
       return {
         label: 'Sole-sourced at risk', value: `${risky.length} <small>materials</small>`, sub: `carrying ${usd(+risky.reduce((a, m) => a + m.avar, 0).toFixed(1))} of adjusted value at risk`,
-        spark: sparkSvg(topSup.trend, '#ff9500'),
+        spark: sparkSvg(topSup.trend, p.color),
         stats: [{ l: 'Top supplier', v: usd(topSup.avar), s: topSup.name.split(' ')[0] }, { l: 'Dual-sourced', v: cover + '%', s: 'of materials' }]
       };
     }
@@ -274,7 +277,7 @@ window.SCR = window.SCR || {};
     const atRisk = d.plants.filter(x => x.criticalMats > 0).length;
     return {
       label: 'Runs out first', value: `${esc(pt.name.split(',')[0])} <small>· ${pt.ttsMin} days</small>`, sub: `cover on ${esc(lc(tight.name))}; ${pt.criticalMats} components can stop the site`,
-      spark: sparkSvg(d.plants.map(x => x.ttsMin), '#007aff'),
+      spark: sparkSvg(d.plants.map(x => x.ttsMin), p.color),
       stats: [{ l: 'Sites exposed', v: `${atRisk}/${d.plants.length}`, s: 'with stoppers' }, { l: 'Utilisation', v: pt.utilization + '%', s: pt.name.split(',')[0] }]
     };
   }
@@ -314,19 +317,19 @@ window.SCR = window.SCR || {};
     const pt = d.plants.slice().sort((a, b) => a.ttsMin - b.ttsMin || b.criticalMats - a.criticalMats)[0];
     const openActs = d.actions.filter(a => a.status !== 'Completed').length;
     const Q = {
-      approvals: { icon: I.decisions, tone: '#af52de', label: 'Approvals', value: pending + ' waiting', go: () => SCR.navigate('agents') },
-      brief: { icon: I.doc, tone: '#0071e3', label: 'Daily brief', value: 'Draft it', go: () => ask('Draft the executive brief') },
-      simulate: { icon: I.simulate, tone: '#30b0c7', label: 'Simulate', value: 'Run the twin', go: () => switchTab('simulate') },
-      critical: { icon: I.warn, tone: '#ff3b30', label: 'Critical alerts', value: crit + ' open', go: () => { alertsState.mine = false; alertsState.sev = 'critical'; stacks.alerts = null; switchTab('alerts'); } },
-      breaks: { icon: I.bolt, tone: '#ff9500', label: 'What breaks first', value: fragile.brand, go: () => ask(`What breaks ${fragile.name} first?`) },
-      gaps: { icon: I.clock, tone: '#ff3b30', label: 'TTR > TTS', value: d.kpis.gapMaterials + ' components', go: () => ask('Which products have TTR > TTS?') },
-      alerts: { icon: I.alerts, tone: '#ff9500', label: 'My alerts', value: myAlerts().length + ' open', go: () => { alertsState.mine = true; alertsState.sev = 'all'; stacks.alerts = null; switchTab('alerts'); } },
-      plan: { icon: I.swap, tone: '#34c759', label: 'Plan alternates', value: d.kpis.singleSourceRisky + ' at risk', go: () => ask('Mitigation plan for single-source materials') },
-      email: { icon: I.mail, tone: '#0071e3', label: 'Supplier email', value: topSup.name.split(' ')[0], go: () => ask(`Draft an email to ${topSup.name}`) },
-      single: { icon: I.link, tone: '#af52de', label: 'Sole sources', value: d.kpis.singleSourceCount + ' materials', go: () => ask('Which materials are single-sourced?') },
-      actions: { icon: I.list, tone: '#34c759', label: 'Actions', value: openActs + ' in flight', go: () => SCR.navigate('actions') },
-      outage: { icon: I.power, tone: '#ff3b30', label: 'Rehearse outage', value: pt.name.split(',')[0], go: () => openSimulate(pt.id, { days: 21 }) },
-      cover: { icon: I.gauge, tone: '#007aff', label: 'Shortest cover', value: pt.ttsMin + ' days', go: () => ask('Which plant has the shortest cover?') }
+      approvals: { icon: I.decisions, tone: '#fac400', label: 'Approvals', value: pending + ' waiting', go: () => SCR.navigate('agents') },
+      brief: { icon: I.doc, tone: '#4c8dff', label: 'Daily brief', value: 'Draft it', go: () => ask('Draft the executive brief') },
+      simulate: { icon: I.simulate, tone: '#34bfaf', label: 'Simulate', value: 'Run the twin', go: () => switchTab('simulate') },
+      critical: { icon: I.warn, tone: '#ff5a4e', label: 'Critical alerts', value: crit + ' open', go: () => { alertsState.mine = false; alertsState.sev = 'critical'; stacks.alerts = null; switchTab('alerts'); } },
+      breaks: { icon: I.bolt, tone: '#ffb347', label: 'What breaks first', value: fragile.brand, go: () => ask(`What breaks ${fragile.name} first?`) },
+      gaps: { icon: I.clock, tone: '#ff5a4e', label: 'TTR > TTS', value: d.kpis.gapMaterials + ' components', go: () => ask('Which products have TTR > TTS?') },
+      alerts: { icon: I.alerts, tone: '#ffb347', label: 'My alerts', value: myAlerts().length + ' open', go: () => { alertsState.mine = true; alertsState.sev = 'all'; stacks.alerts = null; switchTab('alerts'); } },
+      plan: { icon: I.swap, tone: '#3cc47a', label: 'Plan alternates', value: d.kpis.singleSourceRisky + ' at risk', go: () => ask('Mitigation plan for single-source materials') },
+      email: { icon: I.mail, tone: '#4c8dff', label: 'Supplier email', value: topSup.name.split(' ')[0], go: () => ask(`Draft an email to ${topSup.name}`) },
+      single: { icon: I.link, tone: '#9a80f5', label: 'Sole sources', value: d.kpis.singleSourceCount + ' materials', go: () => ask('Which materials are single-sourced?') },
+      actions: { icon: I.list, tone: '#3cc47a', label: 'Actions', value: openActs + ' in flight', go: () => SCR.navigate('actions') },
+      outage: { icon: I.power, tone: '#ff5a4e', label: 'Rehearse outage', value: pt.name.split(',')[0], go: () => openSimulate(pt.id, { days: 21 }) },
+      cover: { icon: I.gauge, tone: '#4c8dff', label: 'Shortest cover', value: pt.ttsMin + ' days', go: () => ask('Which plant has the shortest cover?') }
     };
     return Q[key];
   }
@@ -346,6 +349,7 @@ window.SCR = window.SCR || {};
             trail: `<button class="m-avatar" type="button" data-hint="m-avatar" style="--av:${p.color}">${esc(SCR.personas.initials(p.name))}</button>`
           })}
           <section class="m-card m-hero" data-hint="m-hero" style="--tone:${p.color}">
+            <div class="chrome-field" aria-hidden="true"></div>
             <div class="m-hero-top">
               <div><span class="m-hero-label">${esc(h.label)}</span><div class="m-hero-value">${h.value}</div></div>
               ${h.spark}
@@ -372,6 +376,24 @@ window.SCR = window.SCR || {};
           <div class="m-list" data-hint="m-watch">${watch.items.map((w, i) => row({ title: w.title, sub: w.sub, trail: w.trail, attrs: `data-watch="${i}"` })).join('')}</div>
           <button type="button" class="m-ask-cta" data-hint="m-ask-cta">${spark()}<span>Ask about today…</span></button>`;
         body.querySelector('.m-avatar').addEventListener('click', openRoleSheet);
+        // live signals for this role, worst first, as a strip under the headline
+        const heroEl = body.querySelector('.m-hero');
+        if (SCR.motion && heroEl) {
+          const sevC = { critical: 'var(--status-critical)', high: 'var(--status-serious)', medium: 'var(--status-warning)' };
+          const rank = { critical: 0, high: 1, medium: 2, low: 3 };
+          let sig = myAlerts();
+          if (sig.length < 3) sig = d.alerts.filter(a => a.status !== 'closed');
+          sig = sig.slice().sort((a, b) => (rank[a.sev] - rank[b.sev]) || (b.exposure - a.exposure)).slice(0, 6);
+          const strip = SCR.motion.ticker(sig.map(a => ({
+            html: `${esc(a.title.split(' — ')[0])}${a.exposure ? ` <b>${usd(a.exposure)}</b>` : ''}`,
+            sev: sevC[a.sev] || 'var(--ink-4)',
+            onClick: () => SCR.ui.openAlert(a.id)
+          })), { label: 'Live', cls: 'm-ticker', speed: 5 });
+          strip.setAttribute('data-hint', 'm-ticker');
+          strip.setAttribute('data-hint-title', 'Live signals');
+          strip.setAttribute('data-hint-body', 'Open alerts for this role, worst first, scrolling past. Tap one to open it.');
+          heroEl.after(strip);
+        }
         body.querySelectorAll('[data-brief]').forEach(b => b.addEventListener('click', () => items[+b.dataset.brief].act.run()));
         body.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => quickFor(p.mobile.quick[+b.dataset.quick]).go()));
         body.querySelectorAll('[data-watch]').forEach(b => b.addEventListener('click', () => watch.items[+b.dataset.watch].go()));
@@ -1188,6 +1210,7 @@ window.SCR = window.SCR || {};
   /* ================= boot ================= */
   document.addEventListener('DOMContentLoaded', () => {
     try { const t = localStorage.getItem('scr-theme'); if (t) document.body.setAttribute('data-theme', t); } catch (_) { /* private mode */ }
+    if (SCR.motion) SCR.motion.init({ mode: 'mobile' });
     installShims();
     SCR.copilot.setSuggests(persona().suggests);
     buildTabbar();

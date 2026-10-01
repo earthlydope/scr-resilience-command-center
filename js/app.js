@@ -114,6 +114,11 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     document.getElementById('pageScroll').scrollTop = 0;
     currentKey = key;
     page.render(host, opts || {});
+    // arrivals, highlighter and count-ups for what was just drawn
+    if (SCR.motion) {
+      SCR.motion.decorate(host, { mode: 'web' });
+      SCR.motion.route(document.querySelector('.main-col'));
+    }
     // after render, so the page's context() sees the filters it just applied
     if (SCR.ai) SCR.ai.setRoute(key, opts || {});
     requestAnimationFrame(() => SCR.charts.resizeAll());
@@ -178,7 +183,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
   function renderPersonaPill() {
     const p = getPersona(currentPersona);
     document.getElementById('personaPill').innerHTML = `
-      <span class="pp-avatar" style="background:color-mix(in srgb, ${p.color} 22%, transparent);color:${p.color}">${initials(p.name)}</span>
+      <span class="pp-avatar" style="--av:${p.color}">${initials(p.name)}</span>
       <span class="pp-meta">
         <span class="pp-name">${SCR.ui.esc(p.name)}</span>
         <span class="pp-cap">Viewing as</span>
@@ -191,13 +196,13 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     menu.innerHTML = '';
     PERSONAS.forEach(p => {
       const active = p.id === currentPersona;
-      const opt = SCR.ui.el(`<button class="persona-opt" title="${SCR.ui.esc(p.role)}" style="${active ? `background:color-mix(in srgb, ${p.color} 9%, transparent)` : ''}">
-        <span class="po-avatar" style="background:color-mix(in srgb, ${p.color} 16%, transparent);color:${p.color}">${initials(p.name)}</span>
+      const opt = SCR.ui.el(`<button class="persona-opt ${active ? 'on' : ''}" title="${SCR.ui.esc(p.role)}">
+        <span class="po-avatar" style="--av:${p.color}">${initials(p.name)}</span>
         <span class="po-meta">
           <span class="po-name">${SCR.ui.esc(p.name)}</span>
           <span class="po-tag">${SCR.ui.esc(p.tag)}</span>
         </span>
-        ${active ? `<svg class="po-check" viewBox="0 0 24 24" fill="none" stroke="${p.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>` : ''}
+        ${active ? `<svg class="po-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>` : ''}
       </button>`);
       opt.addEventListener('click', () => {
         menu.classList.remove('open');
@@ -234,7 +239,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
       const dark = document.body.getAttribute('data-theme') === 'dark';
       btn.querySelector('.ic-moon').style.display = dark ? 'none' : 'block';
       btn.querySelector('.ic-sun').style.display = dark ? 'block' : 'none';
-      if (meta) meta.setAttribute('content', dark ? '#000000' : '#f5f5f7');
+      if (meta) meta.setAttribute('content', dark ? '#0a0a0b' : '#f4f4f2');
     };
     sync();
     btn.addEventListener('click', () => {
@@ -361,7 +366,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
       </div>
       <ol class="gp-tasks">${p.tasks.map((t, i) => `
         <li><button type="button" data-go="${t.key}">
-          <span class="gp-n" style="background:${p.color}">${i + 1}</span>
+          <span class="gp-n" style="--av:${p.color}">${i + 1}</span>
           <span class="gp-t"><b>${esc(t.t)}</b><small>${esc(t.d)}</small><em>${esc(t.where)}</em></span>
           ${CHEVRON}
         </button></li>`).join('')}
@@ -428,6 +433,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
 
   /* ================= Boot ================= */
   document.addEventListener('DOMContentLoaded', () => {
+    if (SCR.motion) SCR.motion.init({ mode: 'web' });
     initTheme();
     initPersonaSwitcher();
     initNotifications();

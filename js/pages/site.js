@@ -76,13 +76,14 @@ window.SCR = window.SCR || {};
     grid.appendChild(U.el('<div class="section-title col-12">Manufacturing plants</div>'));
     D.plants.forEach(pt => {
       const crit = pt.criticalMats;
-      const card = U.el(`<div class="card col-3" style="cursor:pointer">
-        <div class="card-body" style="padding:16px 17px 14px">
-          <div class="flex aic spread" style="margin-bottom:8px">
-            <strong style="font-size:16px">${U.esc(pt.name)}</strong>
+      const card = U.el(`<div class="card col-3 site-tile" style="cursor:pointer">
+        <div class="card-body" style="padding:16px 17px 15px">
+          <div class="flex aic spread" style="margin-bottom:10px">
             ${U.riBadge(pt.ri)}
+            <span class="tile-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span>
           </div>
-          <div class="muted" style="font-size:13px;margin-bottom:10px">${U.esc(pt.focus)} · ${U.esc(pt.region)}</div>
+          <strong class="tile-name">${U.esc(pt.name)}</strong>
+          <div class="muted" style="font-size:12.5px;margin-bottom:12px">${U.esc(pt.focus)} · ${U.esc(pt.region)}</div>
           <div class="flex wrap gap12" style="font-size:13px">
             <span><b style="font-size:16.5px">${F.usdM(pt.nts)}</b><br/><span class="muted">NTS served</span></span>
             <span><b style="font-size:16.5px">${pt.products.length}</b><br/><span class="muted">products</span></span>
