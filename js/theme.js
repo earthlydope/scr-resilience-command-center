@@ -18,7 +18,7 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
 (function () {
   /* Montserrat (loaded from Google Fonts) carries the whole system; the
      fallbacks keep a geometric feel until it arrives or when offline. */
-  const FONT = 'Montserrat, "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif';
+  let FONT = 'Montserrat, "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif';
 
   function cssVar(name) {
     return getComputedStyle(document.body || document.documentElement)
@@ -197,17 +197,29 @@ SCR.registerPage = SCR.registerPage || function (key, page) { SCR.pages[key] = p
     return L > 0.19 ? "#111013" : "#ffffff";
   }
 
-  /* Canvas text only uses Montserrat once it has loaded: re-draw once it lands. */
-  if (document.fonts && document.fonts.load) {
-    const ready = () => { try { return document.fonts.check('600 12px Montserrat'); } catch (_) { return true; } };
-    if (!ready()) {
-      document.fonts.load('600 12px Montserrat').then(() => {
-        if (ready() && SCR.charts && SCR.charts.rerenderAll) SCR.charts.rerenderAll();
-      }).catch(() => {});
-    }
-  }
+  /* Canvas text only uses Montserrat once it has loaded. Charts drawn before
+     that were measured in the fallback face, and zrender caches text widths
+     per font string — so once every weight lands, the font string changes
+     (same faces, new cache key) and any chart drawn early re-measures and
+     re-draws. The apps wait briefly on fontsReady before their first render,
+     so usually nothing is drawn early and nothing has to redraw. */
+  const fontLoaded = () => { try { return document.fonts.check('600 12px Montserrat'); } catch (_) { return true; } };
+  let drawnEarly = false;
+  const fontsReady = (document.fonts && document.fonts.load && !fontLoaded())
+    ? Promise.all(['400', '500', '600', '700'].map(w => document.fonts.load(w + ' 12px Montserrat')))
+      .then(() => document.fonts.ready).catch(() => {})
+    : Promise.resolve();
+  fontsReady.then(() => {
+    if (!drawnEarly || !fontLoaded()) return;
+    FONT = '"Montserrat", "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif';
+    if (SCR.charts && SCR.charts.rerenderAll) SCR.charts.rerenderAll();
+  });
+  /** Called by the chart mount: remembers a chart was drawn before the face arrived. */
+  function noteDraw() { if (!drawnEarly && !fontLoaded()) drawnEarly = true; }
+  /** Resolves when Montserrat is ready, or after `ms` at most. */
+  function whenFonts(ms) { return Promise.race([fontsReady, new Promise(r => setTimeout(r, ms == null ? 700 : ms))]); }
 
-  SCR.theme = { tokens, baseOption, catAxis, valAxis, onColor };
+  SCR.theme = { tokens, baseOption, catAxis, valAxis, onColor, noteDraw, whenFonts, fontsReady };
   SCR.fmt = fmt;
   SCR.risk = { ratingOf, ratingClass, ratingColor, scoreColor, riBand, riClass, riColor };
 })();

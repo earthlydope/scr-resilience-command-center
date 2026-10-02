@@ -117,7 +117,10 @@ window.SCR = window.SCR || {};
       </div>`);
       if (it.onClick) {
         node.addEventListener('click', it.onClick);
-        node.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.onClick(e); } });
+        node.addEventListener('keydown', e => {
+          if (e.target.closest && e.target.closest('.info-btn')) return;   // Enter on the ⓘ opens its note
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.onClick(e); }
+        });
       }
       // A sub-pill can be its own drill target ("2 critical" → the critical queue),
       // so it must not also fire the tile's broader navigation.

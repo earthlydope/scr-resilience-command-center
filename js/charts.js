@@ -12,18 +12,172 @@ window.SCR = window.SCR || {};
 (function () {
   const registry = []; // { el, chart, factory }
 
-  /* Shared finish applied to every option: plain (unstacked) bars get
-     small, crisp caps. Anything a chart sets explicitly wins. */
-  function polish(opt) {
-    if (!opt || !opt.series) return opt;
+  /* ---------------- Shared finish ----------------
+     Applied to every option; anything a chart sets explicitly wins.
+     · Every text style names the face. ECharts lays axis labels out
+       (containLabel, truncation, wrapping) from the label's *own*
+       fontFamily and falls back to plain sans-serif, while it draws them
+       in the global face — with Montserrat ~12% wider, long names were
+       measured short and clipped. Naming the face keeps both in step.
+     · Plain (unstacked) bars get small, crisp caps.
+     · Horizontal reference lines keep their label inside the plot.
+     · Sankeys reserve room on the right for the last column's names. */
+  const AXES = ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis'];
+  function withFont(o, font) {
+    if (o && typeof o === 'object' && !o.fontFamily) o.fontFamily = font;
+    return o;
+  }
+  function textWidth(text, size, weight, font) {
+    try { return echarts.format.getTextRect(String(text), `${weight || 'normal'} ${size || 12}px ${font}`).width; }
+    catch (_) { return String(text).length * (size || 12) * 0.62; }
+  }
+  /* Height a horizontal legend will take at this width: lay its items out the
+     way ECharts does (icon, 5px, label, itemGap) and count the rows. */
+  function legendHeight(opt, W, font) {
+    const lg = [].concat(opt.legend || [])[0];
+    if (!lg || lg.show === false || lg.orient === 'vertical' || !W) return 0;
+    let names = (lg.data || []).map(d => (d && typeof d === 'object') ? d.name : d);
+    if (!names.length) {
+      [].concat(opt.series || []).forEach(sr => {
+        if (!sr) return;
+        if (sr.type === 'pie' || sr.type === 'funnel') (sr.data || []).forEach(d => names.push(d && d.name));
+        else if (sr.name) names.push(sr.name);
+      });
+    }
+    names = names.filter((n, i, a) => n != null && a.indexOf(n) === i);
+    if (!names.length) return 0;
+    const ts = lg.textStyle || {};
+    const size = ts.fontSize || 12, weight = ts.fontWeight || 'normal';
+    const iw = lg.itemWidth || 25, ih = lg.itemHeight || 14, gap = lg.itemGap == null ? 10 : lg.itemGap;
+    const maxW = W - 20;
+    let rows = 1, x = 0;
+    names.forEach(n => {
+      const w = iw + 5 + textWidth(n, size, weight, font);
+      if (x > 0 && x + w > maxW) { rows += 1; x = 0; }
+      x += w + gap;
+    });
+    return rows * Math.max(ih, Math.ceil(size * 1.2)) + (rows - 1) * gap + 10;
+  }
+  function reserveLegend(opt, W, font) {
+    const lg = [].concat(opt.legend || [])[0];
+    const grids = [].concat(opt.grid || []);
+    if (!lg || !grids.length || !grids[0]) return;
+    const h = legendHeight(opt, W, font);
+    if (!h) return;
+    const atBottom = lg.bottom != null && lg.bottom !== 'auto' && (lg.top == null || lg.top === 'auto');
+    if (atBottom) {
+      const g = grids[grids.length - 1];
+      const off = typeof lg.bottom === 'number' ? lg.bottom : 0;
+      if (typeof g.bottom !== 'string') g.bottom = Math.max(g.bottom || 0, off + h + 8);
+    } else {
+      const g = grids[0];
+      const off = typeof lg.top === 'number' ? lg.top : 0;
+      if (typeof g.top !== 'string') g.top = Math.max(g.top == null ? 60 : g.top, off + h + 10);
+    }
+  }
+
+  function polish(opt, el) {
+    if (!opt) return opt;
+    const font = SCR.theme.tokens().font;
+    reserveLegend(opt, el ? el.clientWidth : 0, font);
+    AXES.forEach(k => {
+      [].concat(opt[k] || []).forEach(ax => {
+        if (!ax) return;
+        ax.axisLabel = withFont(ax.axisLabel || {}, font);
+        ax.nameTextStyle = withFont(ax.nameTextStyle || {}, font);
+      });
+    });
+    [].concat(opt.title || []).forEach(tt => { if (tt) { tt.textStyle = withFont(tt.textStyle || {}, font); tt.subtextStyle = withFont(tt.subtextStyle || {}, font); } });
+    [].concat(opt.dataZoom || []).forEach(z => { if (z) z.textStyle = withFont(z.textStyle || {}, font); });
+    [].concat(opt.visualMap || []).forEach(v => { if (v) v.textStyle = withFont(v.textStyle || {}, font); });
+    [].concat(opt.legend || []).forEach(l => { if (l) l.textStyle = withFont(l.textStyle || {}, font); });
+    if (!opt.series) return opt;
     const yAxes = [].concat(opt.yAxis || []);
     const horizontal = yAxes.length > 0 && yAxes.every(a => a && a.type === 'category');
     [].concat(opt.series).forEach(sr => {
-      if (!sr || sr.type !== 'bar' || sr.stack) return;
-      sr.itemStyle = sr.itemStyle || {};
-      if (sr.itemStyle.borderRadius == null) sr.itemStyle.borderRadius = horizontal ? [0, 3, 3, 0] : [3, 3, 0, 0];
+      if (!sr) return;
+      ['label', 'upperLabel', 'endLabel'].forEach(k => { if (sr[k]) withFont(sr[k], font); });
+      if (sr.markLine) {
+        sr.markLine.label = withFont(sr.markLine.label || {}, font);
+        const data = sr.markLine.data || [];
+        const horiz = data.some(d => d && d.yAxis != null);
+        if (horiz && !sr.markLine.label.position) sr.markLine.label.position = 'insideEndTop';
+        // a vertical line labels its top end, above the plot: leave headroom for it
+        const vert = data.some(d => d && d.xAxis != null);
+        const pos = sr.markLine.label.position;
+        if (vert && (!pos || pos === 'end') && sr.markLine.label.show !== false) {
+          [].concat(opt.grid || []).forEach((g, gi) => {
+            if (g && gi === (sr.xAxisIndex || 0) && typeof g.top !== 'string') g.top = Math.max(g.top == null ? 60 : g.top, 24);
+          });
+        }
+      }
+      if (sr.type === 'bar' && !sr.stack) {
+        sr.itemStyle = sr.itemStyle || {};
+        if (sr.itemStyle.borderRadius == null) sr.itemStyle.borderRadius = horizontal ? [0, 3, 3, 0] : [3, 3, 0, 0];
+      }
+      if (sr.type === 'sankey' && typeof sr.right === 'number' && sr.data && sr.links) {
+        // names in the last column are drawn to the right of their nodes
+        const lab = sr.label || {};
+        const hasOut = new Set(sr.links.map(l => l.source));
+        const size = lab.fontSize || 12;
+        const widest = sr.data.filter(n => !hasOut.has(n.name)).reduce((w, n) => {
+          const txt = typeof lab.formatter === 'function' ? lab.formatter({ name: n.name, data: n, value: n.value }) : n.name;
+          return Math.max(w, textWidth(txt, size, lab.fontWeight, font));
+        }, 0);
+        sr.right = Math.max(sr.right, Math.ceil(widest) + 16);
+      }
     });
     return opt;
+  }
+
+  /* ---------------- Legends make their own room ----------------
+     A legend that wraps onto a second row (longer names, a narrower card)
+     must push the plot away rather than sit on the axis labels. polish()
+     reserves that room before drawing (one layout pass, no visible jump);
+     after drawing, the legend's real box is checked and the grid edge is
+     corrected only if the estimate missed. */
+  const px = (v, H) => typeof v === 'number' ? v : (typeof v === 'string' && /%$/.test(v) ? parseFloat(v) / 100 * H : (parseFloat(v) || 0));
+  function legendBox(chart) {
+    const model = chart.getModel().getComponent('legend');
+    if (!model || model.get('show') === false) return null;
+    if (model.getData && !model.getData().length) return null;   // nothing listed, nothing to clear
+    const view = chart.getViewOfComponentModel(model);
+    if (!view || !view.group) return null;
+    const r = view.group.getBoundingRect().clone();
+    const m = view.group.getComputedTransform ? view.group.getComputedTransform() : null;
+    if (m) r.applyTransform(m);
+    return r.height > 0 ? r : null;
+  }
+  function fitLegend(entry) {
+    const ch = entry.chart;
+    let opt;
+    try { opt = ch.getOption(); } catch (_) { return; }
+    const lg = opt.legend && opt.legend[0];
+    const grids = opt.grid || [];
+    if (!lg || lg.show === false || !grids.length || lg.orient === 'vertical') return;
+    let box;
+    try { box = legendBox(ch); } catch (_) { box = null; }
+    if (!box) return;
+    const H = ch.getHeight();
+    const atBottom = lg.bottom != null && lg.bottom !== 'auto' && (lg.top == null || lg.top === 'auto');
+    const patch = grids.map(() => ({}));
+    // the room was reserved before drawing; correct only a real miss
+    if (atBottom) {
+      const want = Math.ceil(H - box.y) + 6;
+      const gi = grids.length - 1;
+      if (px(grids[gi].bottom, H) >= want - 2) return;
+      patch[gi] = { bottom: want + 2 };
+    } else {
+      const want = Math.ceil(box.y + box.height) + 8;
+      if (px(grids[0].top, H) >= want - 2) return;
+      patch[0] = { top: want + 2 };
+    }
+    try { ch.setOption({ grid: patch }); } catch (_) {}
+  }
+
+  function draw(entry, notMerge) {
+    entry.chart.setOption(polish(entry.factory(), entry.el), notMerge);
+    fitLegend(entry);
   }
 
   /** Mount a chart. `factory()` returns an ECharts option — it is
@@ -31,8 +185,9 @@ window.SCR = window.SCR || {};
   function mount(el, factory) {
     if (!el) return null;
     const chart = echarts.init(el, null, { renderer: 'canvas' });
-    chart.setOption(polish(factory()));
     const entry = { el, chart, factory };
+    if (SCR.theme.noteDraw) SCR.theme.noteDraw();
+    draw(entry, false);
     // A canvas keeps its last pixel size until told otherwise, so a container
     // change that isn't a window resize (sidebar collapse, layout reflow, zoom)
     // would leave it overflowing its card. Observing the box closes that class
@@ -48,7 +203,8 @@ window.SCR = window.SCR || {};
         const w = Math.round(box.width), h = Math.round(box.height);
         if (w === lastW && h === lastH) return;
         lastW = w; lastH = h;
-        try { chart.resize(); } catch (_) {}
+        // layout-dependent options (label widths, legend room) are recomputed
+        try { chart.resize(); draw(entry, false); } catch (_) {}
       });
       entry.ro.observe(el);
     }
@@ -65,13 +221,11 @@ window.SCR = window.SCR || {};
   }
 
   function rerenderAll() {
-    registry.forEach(e => {
-      try { e.chart.setOption(polish(e.factory()), true); } catch (_) {}
-    });
+    registry.forEach(e => { try { draw(e, true); } catch (_) {} });
   }
 
   function resizeAll() {
-    registry.forEach(e => { try { e.chart.resize(); } catch (_) {} });
+    registry.forEach(e => { try { e.chart.resize(); fitLegend(e); } catch (_) {} });
   }
   window.addEventListener('resize', () => resizeAll());
 
@@ -140,7 +294,8 @@ window.SCR = window.SCR || {};
         }),
         legend: { show: false },
         grid: { left: 8, right: 14, top: 26, bottom: 4, containLabel: true },
-        xAxis: SCR.theme.catAxis(labels, { axisLabel: { color: t.ink3, fontSize: 12.5, interval: 0, width: 92, overflow: 'break' } }),
+        // each label wraps inside its own column, so neighbours never touch
+        xAxis: SCR.theme.catAxis(labels, { axisLabel: { color: t.ink3, fontSize: 12, interval: 0, width: Math.max(48, Math.floor(((el.clientWidth || 600) - 76) / Math.max(1, labels.length)) - 10), overflow: 'break', lineHeight: 15 } }),
         yAxis: SCR.theme.valAxis({ axisLabel: { formatter: v => fmtV(v) } }),
         series: [
           { name: 'base', type: 'bar', stack: 'wf', itemStyle: { color: 'transparent' }, emphasis: { itemStyle: { color: 'transparent' } }, tooltip: { show: false }, data: base, barMaxWidth: barMax },
@@ -289,7 +444,7 @@ window.SCR = window.SCR || {};
             return `<strong>${v[5]}</strong><br/>${v[3]} · ${f(v[1])} → ${f(v[2])} (${days}d)<br/><span style="opacity:.65">Status: ${v[4]}</span>`;
           }
         }),
-        grid: { left: 8, right: 16, top: 10, bottom: 6, containLabel: true },
+        grid: { left: 8, right: 16, top: 28, bottom: 6, containLabel: true },
         xAxis: {
           type: 'time', min, max,
           axisLine: { lineStyle: { color: t.axis } },
@@ -319,7 +474,8 @@ window.SCR = window.SCR || {};
           markLine: {
             symbol: 'none',
             lineStyle: { color: t.status.critical, width: 1.5, type: 'dashed' },
-            label: { formatter: 'Today', color: t.status.critical, fontSize: 12, position: 'insideEndTop' },
+            // the category axis is inverted, so the line starts at the top
+            label: { formatter: 'Today', color: t.status.critical, fontSize: 12, fontWeight: 600, position: 'start', distance: 6 },
             data: [{ xAxis: today }]
           }
         }]

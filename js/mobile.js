@@ -1216,8 +1216,9 @@ window.SCR = window.SCR || {};
     buildTabbar();
     syncCaption();
     stacks.today = [todayScreen()];
-    render('fade');
     fit();
+    // the first screen waits a moment for Montserrat so nothing re-measures
+    (SCR.theme.whenFonts ? SCR.theme.whenFonts(700) : Promise.resolve()).then(() => render('fade'));
     window.addEventListener('resize', fit);
     SCR.guide.init({ mode: 'stage', stage: $('stage'), device: $('device') });
     document.addEventListener('keydown', e => {

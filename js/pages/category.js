@@ -403,9 +403,12 @@ window.SCR = window.SCR || {};
             name: c.name,
             value: +catMats.reduce((a, m) => a + m.spend, 0).toFixed(0),
             itemStyle: { color: t.series[CAT_SLOT[c.key]] },
+            // ink or white, whichever reads on this category's colour
+            upperLabel: { color: SCR.theme.onColor(t.series[CAT_SLOT[c.key]]) },
             children: Object.keys(bySub).map(sub => ({
               name: sub, value: +bySub[sub].toFixed(0),
-              itemStyle: { color: t.series[CAT_SLOT[c.key]], opacity: 0.82 }
+              itemStyle: { color: t.series[CAT_SLOT[c.key]], opacity: 0.82 },
+              label: { color: SCR.theme.onColor(t.series[CAT_SLOT[c.key]]) }
             }))
           };
         }).filter(n => n.value > 0);
@@ -417,8 +420,8 @@ window.SCR = window.SCR || {};
           type: 'treemap',
           roam: false, nodeClick: 'zoomToNode',
           breadcrumb: { show: true, top: 0, itemStyle: { color: t.surface3, textStyle: { color: t.ink2 } } },
-          label: { show: true, fontSize: 12.5, color: '#fff', formatter: p => p.name + '\n' + F.usdM(p.value) },
-          upperLabel: { show: true, height: 22, color: '#fff', fontSize: 12.5, fontWeight: 600 },
+          label: { show: true, fontSize: 12.5, formatter: p => p.name + '\n' + F.usdM(p.value) },
+          upperLabel: { show: true, height: 22, fontSize: 12.5, fontWeight: 600 },
           itemStyle: { borderColor: t.surface, borderWidth: 2, gapWidth: 2 },
           levels: [
             { itemStyle: { borderWidth: 0, gapWidth: 3 } },

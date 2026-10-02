@@ -380,20 +380,28 @@ window.SCR = window.SCR || {};
     grid.appendChild(donutCard);
     const donut = SCR.charts.mount(donutCard._chartEl, () => {
       const t = SCR.theme.tokens();
+      const W = donutCard._chartEl.clientWidth || 400;
+      const legendW = Math.max(...secs.map(x => echarts.format.getTextRect(x.name, '500 12.5px ' + t.font).width)) + 26;
+      const side = W - legendW >= 230;
+      const cx = side ? Math.round((W - legendW - 8) / 2) : Math.round(W / 2);
+      const titleW = echarts.format.getTextRect(F.usdM(D.kpis.totalAVAR), '700 23px ' + t.font).width;
       return Object.assign(SCR.theme.baseOption(), {
         tooltip: Object.assign(SCR.theme.baseOption().tooltip, {
           trigger: 'item',
           formatter: p => `<strong>${p.name}</strong><br/>${F.usdM(p.value)} AVAR · ${p.percent.toFixed(1)}% of total`
         }),
-        legend: Object.assign(SCR.theme.baseOption().legend, { bottom: 0, left: 'center', itemGap: 12 }),
+        // a wide card keeps the sector list beside the ring; a narrow one puts it below
+        legend: Object.assign(SCR.theme.baseOption().legend, side
+          ? { orient: 'vertical', right: 4, top: 'middle', itemGap: 14 }
+          : { bottom: 0, left: 'center', itemGap: 12 }),
         title: {
           text: F.usdM(D.kpis.totalAVAR), subtext: 'total AVAR',
-          left: 'center', top: '40%',
+          left: side ? Math.round(cx - titleW / 2) : 'center', top: side ? '41%' : '38%',
           textStyle: { color: t.ink, fontSize: 23, fontWeight: 700 },
           subtextStyle: { color: t.ink3, fontSize: 13 }
         },
         series: [{
-          type: 'pie', radius: ['58%', '80%'], center: ['50%', '46%'],
+          type: 'pie', radius: side ? ['56%', '80%'] : ['54%', '74%'], center: side ? [cx, '50%'] : ['50%', '42%'],
           label: { show: false }, labelLine: { show: false },
           data: secs.map(s => ({
             name: s.name, value: s.avar,
@@ -476,13 +484,17 @@ window.SCR = window.SCR || {};
         grid: { left: 8, right: 14, top: 14, bottom: 30, containLabel: true },
         xAxis: SCR.theme.catAxis(D.monthly.months, { axisLabel: { color: SCR.theme.tokens().ink3, fontSize: 12.5, interval: 2 } }),
         yAxis: SCR.theme.valAxis({ axisLabel: { formatter: v => '$' + v + 'M' } }),
-        series: mitKeys.map((k, i) => ({
-          name: k, type: 'line', stack: 'mit', smooth: false, symbol: 'none',
-          data: D.monthly.mitigatedCum[k],
-          lineStyle: { width: 2, color: t.series[i] },
-          itemStyle: { color: t.series[i] },
-          areaStyle: { color: t.series[i], opacity: 0.30 }
-        }))
+        // four distinct hues: ink tinted at 30% reads as a second grey beside slate
+        series: mitKeys.map((k, i) => {
+          const c = [t.series[1], t.series[2], t.series[4], t.series[5]][i % 4];
+          return {
+            name: k, type: 'line', stack: 'mit', smooth: false, symbol: 'none',
+            data: D.monthly.mitigatedCum[k],
+            lineStyle: { width: 2, color: c },
+            itemStyle: { color: c },
+            areaStyle: { color: c, opacity: t.isDark ? 0.34 : 0.26 }
+          };
+        })
       });
     });
 

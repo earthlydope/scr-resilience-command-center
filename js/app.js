@@ -407,7 +407,7 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     try { told = sessionStorage.getItem('scr-guide-told') === '1'; } catch (_) { told = false; }
     if (!told && SCR.guide.enabled()) {
       setTimeout(() => SCR.ui.toast('Guide is on',
-        'Point at any control for what it does and why. The <strong>?</strong> button lists your role’s jobs and turns explanations off.', 'info'), 900);
+        'Point at any control for what it does and why, or use the <strong>ⓘ</strong> on any card, chart or tile. The <strong>?</strong> button lists your role’s jobs and turns hover explanations off.', 'info'), 900);
       try { sessionStorage.setItem('scr-guide-told', '1'); } catch (_) { /* private mode */ }
     }
   }
@@ -442,6 +442,8 @@ SCR.registerPage = function (key, page) { SCR.pages[key] = page; };
     initSideToggle();
     initGuide();
     if (SCR.copilot && SCR.copilot.init) SCR.copilot.init();
-    setPersona(currentPersona);
+    // the first page waits a moment for Montserrat so its charts measure once
+    const ready = SCR.theme.whenFonts ? SCR.theme.whenFonts(700) : Promise.resolve();
+    ready.then(() => setPersona(currentPersona));
   });
 })();

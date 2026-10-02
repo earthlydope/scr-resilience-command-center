@@ -35,3 +35,49 @@
 @keyframes gdFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes gdDraw { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .gd-ring, .gd-card, .gd-curve { animation: none; stroke-dashoffset: 0; } }
+
+/* ============ ⓘ — the same explanation, on demand ============ */
+.info-btn {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 20px; height: 20px; padding: 0; margin-left: 6px; vertical-align: -4px;
+  border: none; border-radius: 50%; background: transparent; color: var(--ink-4);
+  cursor: pointer; transition: color .2s, background-color .2s, transform .15s;
+}
+.info-btn svg { width: 16px; height: 16px; }
+.info-btn:hover, .info-btn.on { color: #111013; background: var(--brand); }
+.info-btn:active { transform: scale(.9); }
+.info-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; box-shadow: none; }
+.info-btn.end { margin-left: auto; align-self: center; }
+/* on the dark chrome panels and the signal bands */
+.hero .info-btn, .tk-label .info-btn, .m-hero .info-btn { color: rgba(255, 255, 255, 0.55); }
+.hero .info-btn:hover, .hero .info-btn.on, .tk-label .info-btn:hover, .tk-label .info-btn.on,
+.m-hero .info-btn:hover, .m-hero .info-btn.on { color: #111013; background: var(--brand); }
+.tk-label .info-btn { margin-left: 2px; width: 18px; height: 18px; }
+.tk-label .info-btn svg { width: 14px; height: 14px; }
+.kpi-card .info-btn { margin-left: 2px; width: 18px; height: 18px; }
+.kpi-card .info-btn svg { width: 15px; height: 15px; }
+.m-section .info-btn { margin-left: 8px; vertical-align: -2px; }
+
+.info-pop {
+  position: fixed; z-index: 450; max-width: 300px;
+  background: var(--gd-card); color: var(--gd-ink);
+  border-radius: 10px; border-left: 3px solid var(--gd-tint);
+  padding: 12px 15px 13px;
+  box-shadow: 0 22px 46px -18px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-family: "Montserrat", "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  animation: gdIn .26s cubic-bezier(.22, .8, .24, 1);
+}
+.info-pop.above { animation-name: infoInUp; }
+.info-pop::before {   /* caret toward the ⓘ */
+  content: ""; position: absolute; left: var(--caret, 20px); top: -6px; width: 12px; height: 12px;
+  background: var(--gd-card); transform: translateX(-50%) rotate(45deg); border-radius: 2px;
+}
+.info-pop.above::before { top: auto; bottom: -6px; }
+.info-pop b { position: relative; display: block; font-size: 13.5px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; line-height: 1.3; }
+.info-pop span { position: relative; display: block; font-size: 12.5px; font-weight: 500; line-height: 1.5; color: var(--gd-sub); }
+@keyframes infoInUp { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .info-pop { animation: none; } }
+.info-btn.corner { position: absolute; top: 10px; right: 10px; margin: 0; }
+.m-card:has(> .info-btn.corner) { position: relative; }
+.m-card:has(> .info-btn.corner) > :first-child { padding-right: 24px; }
+.m-kicker .info-btn { margin-left: 4px; width: 18px; height: 18px; vertical-align: -4px; }
